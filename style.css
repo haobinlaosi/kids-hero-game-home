@@ -159,12 +159,12 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
   animation: characterIdle 2s ease-in-out infinite;
 }
 
-.room-pet-slot {
-  min-width: 40px;
-  min-height: 40px;
+.room-pets-row {
   display: flex;
-  align-items: flex-end;
+  gap: 8px;
   justify-content: center;
+  flex-wrap: wrap;
+  min-height: 20px;
 }
 
 .room-pet {
@@ -367,26 +367,162 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
   padding-bottom: 30px;
 }
 
-.pet-pixel-container {
-  width: 160px;
-  height: 160px;
+/* 宠物展示舞台 */
+.pet-display-stage {
+  width: 180px;
+  height: 180px;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f0f8ff, #e8f4e8);
-  border-radius: 24px;
+  border-radius: 28px;
   border: 3px solid #e0e0e0;
-  padding: 16px;
+}
+.pet-emoji-display {
+  position: relative;
+  z-index: 2;
   animation: petFloat 2.5s ease-in-out infinite;
 }
-.pet-pixel-container svg {
-  width: 100%;
-  height: 100%;
+.pet-big-emoji {
+  font-size: 80px;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+}
+.pet-big-emoji.mood-happy { animation: petFloat 2s ease-in-out infinite; }
+.pet-big-emoji.mood-sad { animation: petSad 3s ease-in-out infinite; }
+.pet-mood-effect {
+  position: absolute;
+  font-size: 20px;
+  top: -5px;
+  right: -10px;
+  animation: effectPulse 1.5s ease-in-out infinite;
+}
+.pet-anim-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+  border-radius: 28px;
 }
 
 @keyframes petFloat {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
+}
+@keyframes petSad {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(3px) rotate(3deg); }
+}
+@keyframes effectPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.7); }
+}
+
+/* 喂食动画 */
+.anim-eat { animation: eatBounce 0.9s ease !important; }
+@keyframes eatBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  15% { transform: translateY(-10px) scale(1.1); }
+  30% { transform: translateY(0) scale(0.95); }
+  45% { transform: translateY(-8px) scale(1.08); }
+  60% { transform: translateY(0) scale(0.97); }
+  75% { transform: translateY(-5px) scale(1.05); }
+}
+.anim-food-drop {
+  position: absolute;
+  font-size: 28px;
+  top: -30px;
+  animation: foodDrop 0.7s ease-in forwards;
+}
+@keyframes foodDrop {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  70% { transform: translateY(120px) rotate(180deg); opacity: 1; }
+  100% { transform: translateY(140px) rotate(200deg); opacity: 0; }
+}
+
+/* 洗澡动画 */
+.anim-shake { animation: bathShake 1s ease !important; }
+@keyframes bathShake {
+  0%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(-8deg); }
+  20% { transform: rotate(8deg); }
+  30% { transform: rotate(-6deg); }
+  40% { transform: rotate(6deg); }
+  50% { transform: rotate(-4deg); }
+  60% { transform: rotate(4deg); }
+  70% { transform: rotate(-2deg); }
+  80% { transform: rotate(2deg); }
+}
+.anim-bubble {
+  position: absolute;
+  font-size: 22px;
+  animation: bubbleRise 0.9s ease-out forwards;
+}
+@keyframes bubbleRise {
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  20% { opacity: 1; transform: translateY(-20px) scale(0.8); }
+  100% { transform: translateY(-140px) scale(1.2); opacity: 0; }
+}
+.anim-sparkle {
+  position: absolute;
+  font-size: 24px;
+  animation: sparkle 0.6s ease-out forwards;
+}
+@keyframes sparkle {
+  0% { transform: scale(0) rotate(0deg); opacity: 0; }
+  50% { transform: scale(1.3) rotate(180deg); opacity: 1; }
+  100% { transform: scale(0.8) rotate(360deg); opacity: 0; }
+}
+
+/* 玩耍动画 */
+.anim-jump { animation: playJump 0.9s ease !important; }
+@keyframes playJump {
+  0%, 100% { transform: translateY(0); }
+  20% { transform: translateY(-25px) scale(1.1); }
+  35% { transform: translateY(0) scale(0.9); }
+  50% { transform: translateY(-18px) scale(1.08); }
+  65% { transform: translateY(0) scale(0.95); }
+  80% { transform: translateY(-8px) scale(1.03); }
+}
+.anim-ball-bounce {
+  position: absolute;
+  font-size: 30px;
+  left: 50%;
+  bottom: 10px;
+  animation: ballBounce 0.9s ease forwards;
+}
+@keyframes ballBounce {
+  0% { transform: translate(-50%, 0); }
+  20% { transform: translate(-80px, -80px) rotate(180deg); }
+  40% { transform: translate(-30px, 0) rotate(360deg); }
+  60% { transform: translate(30px, -50px) rotate(540deg); }
+  80% { transform: translate(60px, 0) rotate(720deg); }
+  100% { transform: translate(80px, -30px) rotate(900deg); opacity: 0; }
+}
+.anim-heart-float {
+  position: absolute;
+  font-size: 22px;
+  bottom: 20%;
+  animation: heartFloat 0.7s ease-out forwards;
+}
+@keyframes heartFloat {
+  0% { transform: translateY(0) scale(0.3); opacity: 0; }
+  30% { opacity: 1; transform: translateY(-20px) scale(1); }
+  100% { transform: translateY(-80px) scale(0.6); opacity: 0; }
+}
+
+/* 满足后星星 */
+.anim-star-pop {
+  position: absolute;
+  font-size: 20px;
+  animation: starPop 0.5s ease-out forwards;
+}
+@keyframes starPop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.5); opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0; }
 }
 
 .pet-mood-text {
@@ -499,14 +635,14 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
 }
 .pet-list-card:active { transform: scale(0.95); }
 
-.pet-list-pixel {
+.pet-list-icon {
+  font-size: 36px;
   width: 50px;
   height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-}
-.pet-list-pixel svg {
-  width: 100%;
-  height: 100%;
 }
 
 .pet-list-info {
@@ -549,18 +685,6 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
 .pet-list-mood.normal { background: #fdcb6e; }
 .pet-list-mood.sad { background: #FF6B6B; }
 
-/* 宠物操作反馈动画 */
-.pet-action-feedback {
-  position: fixed;
-  font-size: 40px;
-  pointer-events: none;
-  z-index: 201;
-  animation: actionFly 0.8s ease-out forwards;
-}
-@keyframes actionFly {
-  0% { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-80px) scale(1.5); }
-}
 
 /* 小屋宠物心情指示 */
 .room-pet-wrap {

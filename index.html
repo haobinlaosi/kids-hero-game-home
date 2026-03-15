@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <link rel="manifest" href="manifest.json">
   <title>宝贝任务乐园</title>
-  <link rel="stylesheet" href="style.css?v=9">
+  <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 
@@ -60,10 +60,9 @@
       <div class="room-floor" id="room-floor">
         <div class="room-special" id="room-special"></div>
         <div class="room-center">
-          <div class="room-pet-slot" id="room-pet-left"></div>
           <div class="room-character" id="room-character"></div>
-          <div class="room-pet-slot" id="room-pet-right"></div>
         </div>
+        <div class="room-pets-row" id="room-pets-row"></div>
         <div class="room-furniture" id="room-furniture"></div>
       </div>
     </div>
@@ -115,7 +114,10 @@
       <div class="points-display points-small"><span class="star-icon">&#9733;</span> <span class="pts-val">0</span></div>
     </div>
     <div class="pet-nurture-area">
-      <div class="pet-pixel-container" id="pet-pixel-display"></div>
+      <div class="pet-display-stage" id="pet-display-stage">
+        <div class="pet-emoji-display" id="pet-emoji-display"></div>
+        <div class="pet-anim-layer" id="pet-anim-layer"></div>
+      </div>
       <div class="pet-mood-text" id="pet-mood-text"></div>
       <div class="pet-stats" id="pet-stats"></div>
       <div class="pet-nurture-actions" id="pet-nurture-actions"></div>
@@ -186,6 +188,6 @@
   </div>
 
   <div id="celebration" class="celebration"></div>
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

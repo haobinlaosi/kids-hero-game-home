@@ -850,18 +850,15 @@ const app = {
     document.getElementById('room-character').innerHTML =
       `<img src="${char.img}" alt="${char.name}" style="width:90px;height:110px;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.2))">`;
 
-    // 宠物（角色两侧，点击进入培养页）
+    // 宠物（角色下方，显示全部，点击进入培养页）
     const pets = (house.pets || []).map(id => this.findItem(id)).filter(Boolean);
-    const renderRoomPet = (pet) => {
-      if (!pet) return '';
+    document.getElementById('room-pets-row').innerHTML = pets.map(pet => {
       const mood = this.getPetMood(charId, pet.id);
-      return `<div class="room-pet-wrap">
-        <span class="room-pet clickable" onclick="app.openPetNurture('${pet.id}')">${pet.icon}</span>
+      return `<div class="room-pet-wrap" onclick="app.openPetNurture('${pet.id}')">
+        <span class="room-pet clickable">${pet.icon}</span>
         <span class="pet-mood-dot ${mood}"></span>
       </div>`;
-    };
-    document.getElementById('room-pet-left').innerHTML = renderRoomPet(pets[0]);
-    document.getElementById('room-pet-right').innerHTML = renderRoomPet(pets[1]);
+    }).join('');
 
     // 地板家具
     const furnitureItems = house.items.filter(id => {
@@ -1011,8 +1008,13 @@ const app = {
     // 标题
     document.getElementById('pet-nurture-title').textContent = pet.name;
 
-    // 像素宠物
-    document.getElementById('pet-pixel-display').innerHTML = renderPixelPet(petId, mood);
+    // 大号 emoji 宠物 + 心情特效
+    const moodClass = { happy: 'mood-happy', normal: 'mood-normal', sad: 'mood-sad' };
+    const moodEffects = { happy: '✨', normal: '', sad: '💧' };
+    document.getElementById('pet-emoji-display').innerHTML =
+      `<span class="pet-big-emoji ${moodClass[mood]}">${pet.icon}</span>` +
+      (moodEffects[mood] ? `<span class="pet-mood-effect">${moodEffects[mood]}</span>` : '');
+    document.getElementById('pet-anim-layer').innerHTML = '';
 
     // 心情文字
     const moodTexts = { happy: '很开心！ 😊', normal: '还不错~ 😐', sad: '不太开心... 😢' };
@@ -1080,18 +1082,94 @@ const app = {
     this.saveData();
     this.updateAllPoints();
 
-    // 反馈动画
-    const emojis = { feed: '🍖', bath: '🫧', play: '🎾' };
-    const el = document.createElement('div');
-    el.className = 'pet-action-feedback';
-    el.textContent = emojis[action];
-    el.style.left = '50%';
-    el.style.top = '40%';
-    el.style.transform = 'translateX(-50%)';
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 800);
+    // 丰富的反馈动画
+    this.playNurtureAnim(action, petId);
+  },
 
-    this.renderPetNurture(petId);
+  playNurtureAnim(action, petId) {
+    const layer = document.getElementById('pet-anim-layer');
+    const petEl = document.getElementById('pet-emoji-display');
+    layer.innerHTML = '';
+
+    if (action === 'feed') {
+      // 食物从上方掉落，宠物吃东西弹跳
+      const foods = ['🍖','🍗','🥩','🍕','🍔'];
+      for (let i = 0; i < 5; i++) {
+        const f = document.createElement('span');
+        f.className = 'anim-food-drop';
+        f.textContent = foods[i % foods.length];
+        f.style.left = (20 + Math.random() * 60) + '%';
+        f.style.animationDelay = (i * 0.15) + 's';
+        layer.appendChild(f);
+      }
+      petEl.classList.add('anim-eat');
+      setTimeout(() => {
+        petEl.classList.remove('anim-eat');
+        layer.innerHTML = '';
+        // 满足后冒星星
+        for (let i = 0; i < 4; i++) {
+          const s = document.createElement('span');
+          s.className = 'anim-star-pop';
+          s.textContent = '⭐';
+          s.style.left = (25 + Math.random() * 50) + '%';
+          s.style.top = (20 + Math.random() * 30) + '%';
+          s.style.animationDelay = (i * 0.1) + 's';
+          layer.appendChild(s);
+        }
+        setTimeout(() => { layer.innerHTML = ''; this.renderPetNurture(petId); }, 600);
+      }, 900);
+    } else if (action === 'bath') {
+      // 气泡从四周冒出，宠物摇晃
+      const bubbles = ['🫧','💧','🫧','💧','✨','🫧','💧','🫧'];
+      for (let i = 0; i < 8; i++) {
+        const b = document.createElement('span');
+        b.className = 'anim-bubble';
+        b.textContent = bubbles[i];
+        b.style.left = (10 + Math.random() * 80) + '%';
+        b.style.bottom = '0';
+        b.style.animationDelay = (i * 0.12) + 's';
+        layer.appendChild(b);
+      }
+      petEl.classList.add('anim-shake');
+      setTimeout(() => {
+        petEl.classList.remove('anim-shake');
+        layer.innerHTML = '';
+        // 干净闪光
+        for (let i = 0; i < 5; i++) {
+          const s = document.createElement('span');
+          s.className = 'anim-sparkle';
+          s.textContent = '✨';
+          s.style.left = (15 + Math.random() * 70) + '%';
+          s.style.top = (10 + Math.random() * 60) + '%';
+          s.style.animationDelay = (i * 0.08) + 's';
+          layer.appendChild(s);
+        }
+        setTimeout(() => { layer.innerHTML = ''; this.renderPetNurture(petId); }, 600);
+      }, 1000);
+    } else if (action === 'play') {
+      // 球弹跳，宠物跳跃，冒爱心
+      const ball = document.createElement('span');
+      ball.className = 'anim-ball-bounce';
+      ball.textContent = '🎾';
+      layer.appendChild(ball);
+      petEl.classList.add('anim-jump');
+      setTimeout(() => {
+        petEl.classList.remove('anim-jump');
+        layer.innerHTML = '';
+        const hearts = ['💕','💖','💗','🌟','💕'];
+        for (let i = 0; i < 5; i++) {
+          const h = document.createElement('span');
+          h.className = 'anim-heart-float';
+          h.textContent = hearts[i];
+          h.style.left = (20 + Math.random() * 60) + '%';
+          h.style.animationDelay = (i * 0.12) + 's';
+          layer.appendChild(h);
+        }
+        setTimeout(() => { layer.innerHTML = ''; this.renderPetNurture(petId); }, 700);
+      }, 900);
+    } else {
+      this.renderPetNurture(petId);
+    }
   },
 
   showPetList() {
@@ -1110,7 +1188,7 @@ const app = {
         const c = status?.clean || 0;
         const hp = status?.happy || 0;
         return `<div class="pet-list-card" onclick="app.openPetNurture('${pet.id}')">
-          <div class="pet-list-pixel">${renderPixelPet(pet.id, mood)}</div>
+          <div class="pet-list-icon">${pet.icon}</div>
           <div class="pet-list-info">
             <div class="pet-list-name">${pet.name}</div>
             <div class="pet-list-bars">
