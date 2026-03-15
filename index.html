@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <link rel="manifest" href="manifest.json">
   <title>宝贝任务乐园</title>
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
@@ -69,6 +69,7 @@
     </div>
     <div class="house-buttons">
       <button class="btn btn-small btn-switch" onclick="app.switchHouseCharacter()">切换小屋</button>
+      <button class="btn btn-small" onclick="app.showPetList()" style="background:linear-gradient(135deg,#55efc4,#00b894);color:#fff">🐾 宠物</button>
       <button class="btn btn-small btn-confirm" onclick="app.goToPage('shop')">&#127873; 商店</button>
     </div>
   </div>
@@ -103,6 +104,21 @@
       <div class="battle-actions" id="battle-actions"></div>
       <div id="pet-actions"></div>
       <div class="battle-log" id="battle-log"></div>
+    </div>
+  </div>
+
+  <!-- ========== 宠物培养页 ========== -->
+  <div id="page-pet" class="page">
+    <div class="page-header">
+      <button class="btn-back" onclick="app.goToPage('house')">&#8592;</button>
+      <h2 id="pet-nurture-title">宠物</h2>
+      <div class="points-display points-small"><span class="star-icon">&#9733;</span> <span class="pts-val">0</span></div>
+    </div>
+    <div class="pet-nurture-area">
+      <div class="pet-pixel-container" id="pet-pixel-display"></div>
+      <div class="pet-mood-text" id="pet-mood-text"></div>
+      <div class="pet-stats" id="pet-stats"></div>
+      <div class="pet-nurture-actions" id="pet-nurture-actions"></div>
     </div>
   </div>
 
@@ -160,7 +176,16 @@
     </div>
   </div>
 
+  <!-- 宠物列表弹窗 -->
+  <div id="pet-list-modal" class="modal">
+    <div class="modal-content modal-pet-list">
+      <h3 style="font-size:20px;margin-bottom:12px">🐾 我的宠物</h3>
+      <div id="pet-list-grid"></div>
+      <button class="btn btn-cancel" style="margin-top:12px;width:100%" onclick="app.closePetList()">关闭</button>
+    </div>
+  </div>
+
   <div id="celebration" class="celebration"></div>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

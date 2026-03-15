@@ -106,6 +106,382 @@ const MONSTERS = [
   { id: 'm8', name: '幽灵怪', icon: '👻', maxHp: 10 }
 ];
 
+// ============ 像素宠物 ============
+// 每只宠物用 10x10 网格定义，字符映射颜色
+// 0=透明, 其他字符映射到 colors 对象
+
+const PIXEL_PETS = {
+  p_dog: {
+    colors: { a: '#8B4513', b: '#A0522D', w: '#FFF', e: '#000', n: '#5C3317', p: '#FFB6C1', t: '#FF6B6B' },
+    happy: [
+      '00aa00aa00',
+      '0abba0abba',
+      '0abba0abba',
+      'aabbbaabba',
+      'abewbaewba',
+      'abbbnbbba0',
+      '0abppbba00',
+      '00abbbba00',
+      '00ab00ba00',
+      '00nn00nn00',
+    ],
+    normal: [
+      '00aa00aa00',
+      '0abba0abba',
+      '0abba0abba',
+      'aabbbaabba',
+      'abewbaewba',
+      'abbbbbba00',
+      '0abbbbba00',
+      '00abbbba00',
+      '00ab00ba00',
+      '00nn00nn00',
+    ],
+    sad: [
+      '00aa00aa00',
+      '0abba0abba',
+      '0abba0abba',
+      'aabbbaabba',
+      'abwebaewba',
+      'abbbbbba00',
+      '0abtbbba00',
+      '00abbbba00',
+      '00ab00ba00',
+      '00nn00nn00',
+    ]
+  },
+  p_cat: {
+    colors: { a: '#FF8C00', b: '#FFB347', w: '#FFF', e: '#000', n: '#CC7000', p: '#FFB6C1', t: '#FF6B6B' },
+    happy: [
+      'a000000a00',
+      'ab0000ba00',
+      'aab00baa00',
+      'aabbbba000',
+      'abewbewba0',
+      'abbbpbbba0',
+      '0abbbbba00',
+      '00abbbba00',
+      '00ab00ba00',
+      '00nn00nn0a',
+    ],
+    normal: [
+      'a000000a00',
+      'ab0000ba00',
+      'aab00baa00',
+      'aabbbba000',
+      'abewbewba0',
+      'abbbbbba00',
+      '0abbbbba00',
+      '00abbbba00',
+      '00ab00ba00',
+      '00nn00nn0a',
+    ],
+    sad: [
+      'a000000a00',
+      'ab0000ba00',
+      'aab00baa00',
+      'aabbbba000',
+      'abwebewba0',
+      'abbbbbba00',
+      '0abtbbba00',
+      '00abbbba00',
+      '00ab00ba00',
+      '00nn00nn0a',
+    ]
+  },
+  p_rabbit: {
+    colors: { a: '#FFF', b: '#F0E6E6', w: '#FFF', e: '#000', n: '#DDD', p: '#FFB6C1', t: '#FF6B6B', r: '#FF9999' },
+    happy: [
+      '00ab00ba00',
+      '00ab00ba00',
+      '00ar00ra00',
+      '00abba0000',
+      '0aabbba000',
+      'aabewbewba',
+      'abbbpbbba0',
+      '0aabbba000',
+      '00ab0ba000',
+      '00nn0nn000',
+    ],
+    normal: [
+      '00ab00ba00',
+      '00ab00ba00',
+      '00ar00ra00',
+      '00abba0000',
+      '0aabbba000',
+      'aabewbewba',
+      'abbbbbba00',
+      '0aabbba000',
+      '00ab0ba000',
+      '00nn0nn000',
+    ],
+    sad: [
+      '00ab00ba00',
+      '00ab00ba00',
+      '00ar00ra00',
+      '00abba0000',
+      '0aabbba000',
+      'aabebbewba',
+      'abbtbbba00',
+      '0aabbba000',
+      '00ab0ba000',
+      '00nn0nn000',
+    ]
+  },
+  p_hamster: {
+    colors: { a: '#D2691E', b: '#F4A460', w: '#FFF', e: '#000', n: '#A0522D', p: '#FFB6C1', t: '#FF6B6B', c: '#FFE4C4' },
+    happy: [
+      '0000000000',
+      '00aabaa000',
+      '0aabbbba00',
+      '0abbbbba00',
+      'cabewbewbc',
+      'cabbbpbbbc',
+      '0abbbbba00',
+      '00abbbba00',
+      '00ab00ba00',
+      '00nn00nn00',
+    ],
+    normal: [
+      '0000000000',
+      '00aabaa000',
+      '0aabbbba00',
+      '0abbbbba00',
+      'cabewbewbc',
+      'cabbbbbbc0',
+      '0abbbbba00',
+      '00abbbba00',
+      '00ab00ba00',
+      '00nn00nn00',
+    ],
+    sad: [
+      '0000000000',
+      '00aabaa000',
+      '0aabbbba00',
+      '0abbbbba00',
+      'cabwebewbc',
+      'cabbtbbbc0',
+      '0abbbbba00',
+      '00abbbba00',
+      '00ab00ba00',
+      '00nn00nn00',
+    ]
+  },
+  p_bird: {
+    colors: { a: '#4FC3F7', b: '#81D4FA', w: '#FFF', e: '#000', n: '#0288D1', y: '#FFD700', p: '#FFB6C1', t: '#FF6B6B' },
+    happy: [
+      '0000000000',
+      '000aaa0000',
+      '00aabba000',
+      '00abbbba00',
+      '0abewbbba0',
+      '0abbybbba0',
+      'nabbbbbba0',
+      'nnabbbbba0',
+      '000ab0ba00',
+      '000yy0yy00',
+    ],
+    normal: [
+      '0000000000',
+      '000aaa0000',
+      '00aabba000',
+      '00abbbba00',
+      '0abewbbba0',
+      '0abbybbba0',
+      'nabbbbbba0',
+      'nnabbbbba0',
+      '000ab0ba00',
+      '000yy0yy00',
+    ],
+    sad: [
+      '0000000000',
+      '000aaa0000',
+      '00aabba000',
+      '00abbbba00',
+      '0abwebbba0',
+      '0abbybbba0',
+      'nabbbbbba0',
+      'nnabbbbba0',
+      '000ab0ba00',
+      '000yy0yy00',
+    ]
+  },
+  p_fish: {
+    colors: { a: '#FFD700', b: '#FFA500', w: '#FFF', e: '#000', n: '#FF8C00', t: '#FF6B6B', f: '#87CEEB' },
+    happy: [
+      '0000000000',
+      '0000000000',
+      '000aaa0000',
+      'n0aabbba00',
+      'nnabebbban',
+      'nnabbbbann',
+      'n0aabbba0n',
+      '000aaa0000',
+      '0000000000',
+      '0000000000',
+    ],
+    normal: [
+      '0000000000',
+      '0000000000',
+      '000aaa0000',
+      'n0aabbba00',
+      'nnabebbban',
+      'nnabbbbann',
+      'n0aabbba0n',
+      '000aaa0000',
+      '0000000000',
+      '0000000000',
+    ],
+    sad: [
+      '0000000000',
+      '0000000000',
+      '000aaa0000',
+      'n0aabbba00',
+      'nnabwebbbn',
+      'nnabbtbann',
+      'n0aabbba0n',
+      '000aaa0000',
+      '0000000000',
+      '0000000000',
+    ]
+  },
+  p_panda: {
+    colors: { a: '#000', b: '#FFF', w: '#FFF', e: '#000', n: '#333', p: '#FFB6C1', t: '#FF6B6B' },
+    happy: [
+      '0aa000aa00',
+      'aab00baa00',
+      'abbb0bbba0',
+      'ababababba',
+      'abewbabewb',
+      'ababababba',
+      '0bbbpbbb00',
+      '0abbbba000',
+      '00ab0ba000',
+      '00aa0aa000',
+    ],
+    normal: [
+      '0aa000aa00',
+      'aab00baa00',
+      'abbb0bbba0',
+      'ababababba',
+      'abewbabewb',
+      'ababababba',
+      '0bbbbbbb00',
+      '0abbbba000',
+      '00ab0ba000',
+      '00aa0aa000',
+    ],
+    sad: [
+      '0aa000aa00',
+      'aab00baa00',
+      'abbb0bbba0',
+      'ababababba',
+      'abwebabweb',
+      'ababababba',
+      '0bbbtbbb00',
+      '0abbbba000',
+      '00ab0ba000',
+      '00aa0aa000',
+    ]
+  },
+  p_dragon: {
+    colors: { a: '#4CAF50', b: '#66BB6A', w: '#FFF', e: '#000', n: '#2E7D32', y: '#FFEB3B', p: '#FFB6C1', t: '#FF6B6B' },
+    happy: [
+      '0y0y0y0000',
+      '0aabbba000',
+      '0abbbba000',
+      'aabewbewba',
+      'abbbpbbbba',
+      '0abbbbbba0',
+      '00aabbaa00',
+      '00ab00ba00',
+      '00nn00nn00',
+      '0000000000',
+    ],
+    normal: [
+      '0y0y0y0000',
+      '0aabbba000',
+      '0abbbba000',
+      'aabewbewba',
+      'abbbbbbbba',
+      '0abbbbbba0',
+      '00aabbaa00',
+      '00ab00ba00',
+      '00nn00nn00',
+      '0000000000',
+    ],
+    sad: [
+      '0y0y0y0000',
+      '0aabbba000',
+      '0abbbba000',
+      'aabwebewba',
+      'abbbtbbbba',
+      '0abbbbbba0',
+      '00aabbaa00',
+      '00ab00ba00',
+      '00nn00nn00',
+      '0000000000',
+    ]
+  },
+  p_unicorn: {
+    colors: { a: '#FFF', b: '#F8F0FF', w: '#FFF', e: '#000', n: '#DDD', p: '#FFB6C1', t: '#FF6B6B', h: '#FF69B4', g: '#FFD700', r: '#FF6B6B', u: '#9B59B6' },
+    happy: [
+      '000g000000',
+      '00ga00000u',
+      '0gabbba0uu',
+      '0aabbbba00',
+      'aabewbewba',
+      'abbbpbbbba',
+      '0ahbbbbba0',
+      '00abbbba00',
+      '00ab00ba00',
+      '00nn00nn00',
+    ],
+    normal: [
+      '000g000000',
+      '00ga00000u',
+      '0gabbba0uu',
+      '0aabbbba00',
+      'aabewbewba',
+      'abbbbbbbba',
+      '0ahbbbbba0',
+      '00abbbba00',
+      '00ab00ba00',
+      '00nn00nn00',
+    ],
+    sad: [
+      '000g000000',
+      '00ga00000u',
+      '0gabbba0uu',
+      '0aabbbba00',
+      'aabwebewba',
+      'abbbtbbbba',
+      '0ahbbbbba0',
+      '00abbbba00',
+      '00ab00ba00',
+      '00nn00nn00',
+    ]
+  }
+};
+
+function renderPixelPet(petId, mood) {
+  const pet = PIXEL_PETS[petId];
+  if (!pet) return '';
+  const grid = pet[mood] || pet.normal;
+  const colors = pet.colors;
+  const size = 10;
+  let rects = '';
+  for (let y = 0; y < grid.length; y++) {
+    for (let x = 0; x < grid[y].length; x++) {
+      const ch = grid[y][x];
+      if (ch === '0') continue;
+      const color = colors[ch] || '#CCC';
+      rects += `<rect x="${x * size}" y="${y * size}" width="${size}" height="${size}" fill="${color}"/>`;
+    }
+  }
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated">${rects}</svg>`;
+}
+
 // ============ 应用主类 ============
 
 const app = {
@@ -116,6 +492,7 @@ const app = {
   pendingBuyItem: null,
   shopCategory: 'furniture',
   battleAnimating: false,
+  currentNurturePetId: null,
 
   // ---- 初始化 ----
   init() {
@@ -167,7 +544,66 @@ const app = {
       if (!this.data.houses[k]) this.data.houses[k] = this.getDefaultHouse();
       if (!this.data.houses[k].pets) this.data.houses[k].pets = [];
     }
+    // 宠物培养兼容
+    if (!this.data.petStatus) this.data.petStatus = {};
+    for (const charId of Object.keys(CHARACTERS)) {
+      if (!this.data.petStatus[charId]) this.data.petStatus[charId] = {};
+      const pets = this.data.houses[charId]?.pets || [];
+      for (const petId of pets) {
+        if (!this.data.petStatus[charId][petId]) {
+          this.initPetStatus(charId, petId);
+        }
+      }
+    }
+    this.decayAllPetStats();
     if (!this.data.battle.currentMonster) this.spawnMonster();
+  },
+
+  // ---- 宠物培养数据 ----
+  initPetStatus(charId, petId) {
+    if (!this.data.petStatus[charId]) this.data.petStatus[charId] = {};
+    this.data.petStatus[charId][petId] = {
+      hunger: 80, clean: 80, happy: 80,
+      lastUpdate: this.getToday(),
+      todayActions: { feed: 0, bath: 0, play: 0 },
+      lastActionDate: this.getToday()
+    };
+  },
+
+  decayAllPetStats() {
+    const today = this.getToday();
+    for (const charId of Object.keys(CHARACTERS)) {
+      const statuses = this.data.petStatus[charId] || {};
+      for (const petId of Object.keys(statuses)) {
+        const s = statuses[petId];
+        // 重置每日免费次数
+        if (s.lastActionDate !== today) {
+          s.todayActions = { feed: 0, bath: 0, play: 0 };
+          s.lastActionDate = today;
+        }
+        // 按天数衰减
+        if (s.lastUpdate && s.lastUpdate !== today) {
+          const diff = Math.floor((new Date(today) - new Date(s.lastUpdate)) / 86400000);
+          if (diff > 0) {
+            const decay = diff * 20;
+            s.hunger = Math.max(0, s.hunger - decay);
+            s.clean = Math.max(0, s.clean - decay);
+            s.happy = Math.max(0, s.happy - decay);
+            s.lastUpdate = today;
+          }
+        }
+      }
+    }
+    this.saveData();
+  },
+
+  getPetMood(charId, petId) {
+    const s = this.data.petStatus[charId]?.[petId];
+    if (!s) return 'normal';
+    const min = Math.min(s.hunger, s.clean, s.happy);
+    if (min >= 70) return 'happy';
+    if (min < 30) return 'sad';
+    return 'normal';
   },
 
   saveData() {
@@ -185,6 +621,7 @@ const app = {
     if (page === 'house') this.renderHouse();
     if (page === 'shop') this.renderShop();
     if (page === 'battle') this.renderBattle();
+    if (page === 'pet') this.renderPetNurture(this.currentNurturePetId);
   },
 
   showPage(page) {
@@ -345,12 +782,18 @@ const app = {
     document.getElementById('room-character').innerHTML =
       `<img src="${char.img}" alt="${char.name}" style="width:90px;height:110px;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.2))">`;
 
-    // 宠物（角色两侧，有GIF的可点击）
+    // 宠物（角色两侧，点击进入培养页）
     const pets = (house.pets || []).map(id => this.findItem(id)).filter(Boolean);
-    document.getElementById('room-pet-left').innerHTML = pets[0]
-      ? `<span class="room-pet ${pets[0].gif ? 'clickable' : ''}" ${pets[0].gif ? `onclick="app.showGif('${pets[0].gif}', '${pets[0].name}', 3000)"` : ''}>${pets[0].icon}</span>` : '';
-    document.getElementById('room-pet-right').innerHTML = pets[1]
-      ? `<span class="room-pet ${pets[1].gif ? 'clickable' : ''}" ${pets[1].gif ? `onclick="app.showGif('${pets[1].gif}', '${pets[1].name}', 3000)"` : ''}>${pets[1].icon}</span>` : '';
+    const renderRoomPet = (pet) => {
+      if (!pet) return '';
+      const mood = this.getPetMood(charId, pet.id);
+      return `<div class="room-pet-wrap">
+        <span class="room-pet clickable" onclick="app.openPetNurture('${pet.id}')">${pet.icon}</span>
+        <span class="pet-mood-dot ${mood}"></span>
+      </div>`;
+    };
+    document.getElementById('room-pet-left').innerHTML = renderRoomPet(pets[0]);
+    document.getElementById('room-pet-right').innerHTML = renderRoomPet(pets[1]);
 
     // 地板家具
     const furnitureItems = house.items.filter(id => {
@@ -461,6 +904,7 @@ const app = {
       house.floor = item.id;
     } else if (cat === 'pet') {
       house.pets.push(item.id);
+      this.initPetStatus(charId, item.id);
     } else {
       house.items.push(item.id);
     }
@@ -479,6 +923,143 @@ const app = {
     el.textContent = msg;
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 2000);
+  },
+
+  // ---- 宠物培养 ----
+  openPetNurture(petId) {
+    this.currentNurturePetId = petId;
+    this.closePetList();
+    this.goToPage('pet');
+  },
+
+  renderPetNurture(petId) {
+    const charId = this.data.currentCharacter;
+    const pet = this.findItem(petId);
+    if (!pet) return;
+    const status = this.data.petStatus[charId]?.[petId];
+    if (!status) return;
+    const mood = this.getPetMood(charId, petId);
+
+    // 标题
+    document.getElementById('pet-nurture-title').textContent = pet.name;
+
+    // 像素宠物
+    document.getElementById('pet-pixel-display').innerHTML = renderPixelPet(petId, mood);
+
+    // 心情文字
+    const moodTexts = { happy: '很开心！ 😊', normal: '还不错~ 😐', sad: '不太开心... 😢' };
+    document.getElementById('pet-mood-text').textContent = pet.name + moodTexts[mood];
+
+    // 状态条
+    document.getElementById('pet-stats').innerHTML = [
+      { icon: '🍖', key: 'hunger', label: '饱食', cls: 'hunger' },
+      { icon: '🛁', key: 'clean', label: '清洁', cls: 'clean' },
+      { icon: '🎾', key: 'happy', label: '快乐', cls: 'happy' }
+    ].map(s => `
+      <div class="pet-stat-row">
+        <span class="pet-stat-icon">${s.icon}</span>
+        <div class="pet-stat-bar-wrap">
+          <div class="pet-stat-bar ${s.cls}" style="width:${status[s.key]}%"></div>
+        </div>
+        <span class="pet-stat-val">${status[s.key]}</span>
+      </div>
+    `).join('');
+
+    // 操作按钮
+    const today = this.getToday();
+    if (status.lastActionDate !== today) {
+      status.todayActions = { feed: 0, bath: 0, play: 0 };
+      status.lastActionDate = today;
+      this.saveData();
+    }
+    const actions = [
+      { key: 'feed', icon: '🍖', label: '喂食', cls: 'pet-action-feed', stat: 'hunger' },
+      { key: 'bath', icon: '🛁', label: '洗澡', cls: 'pet-action-bath', stat: 'clean' },
+      { key: 'play', icon: '🎾', label: '玩耍', cls: 'pet-action-play', stat: 'happy' }
+    ];
+    document.getElementById('pet-nurture-actions').innerHTML = actions.map(a => {
+      const isFree = status.todayActions[a.key] < 1;
+      const costText = isFree ? '免费' : '⭐ 5';
+      const isMax = status[a.stat] >= 100;
+      return `<button class="pet-action-btn ${a.cls} ${isMax ? 'disabled' : ''}"
+        onclick="app.doPetAction('${petId}', '${a.key}')"
+        ${isMax ? 'disabled' : ''}>
+        <span class="action-icon">${a.icon}</span>
+        <span>${a.label}</span>
+        <span class="action-cost">${isMax ? '已满' : costText}</span>
+      </button>`;
+    }).join('');
+  },
+
+  doPetAction(petId, action) {
+    const charId = this.data.currentCharacter;
+    const status = this.data.petStatus[charId]?.[petId];
+    if (!status) return;
+
+    const statMap = { feed: 'hunger', bath: 'clean', play: 'happy' };
+    const stat = statMap[action];
+    if (status[stat] >= 100) { this.showToast('已经满了哦~'); return; }
+
+    const isFree = status.todayActions[action] < 1;
+    if (!isFree && this.data.points < 5) { this.showToast('积分不够哦~'); return; }
+
+    if (!isFree) {
+      this.data.points -= 5;
+    }
+    status.todayActions[action]++;
+    status[stat] = Math.min(100, status[stat] + 30);
+
+    this.saveData();
+    this.updateAllPoints();
+
+    // 反馈动画
+    const emojis = { feed: '🍖', bath: '🫧', play: '🎾' };
+    const el = document.createElement('div');
+    el.className = 'pet-action-feedback';
+    el.textContent = emojis[action];
+    el.style.left = '50%';
+    el.style.top = '40%';
+    el.style.transform = 'translateX(-50%)';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 800);
+
+    this.renderPetNurture(petId);
+  },
+
+  showPetList() {
+    const charId = this.data.currentCharacter;
+    const house = this.data.houses[charId];
+    const pets = (house.pets || []).map(id => this.findItem(id)).filter(Boolean);
+    const grid = document.getElementById('pet-list-grid');
+
+    if (pets.length === 0) {
+      grid.innerHTML = '<div class="pet-empty">还没有宠物哦~<br>去商店买一只吧！</div>';
+    } else {
+      grid.innerHTML = pets.map(pet => {
+        const status = this.data.petStatus[charId]?.[pet.id];
+        const mood = this.getPetMood(charId, pet.id);
+        const h = status?.hunger || 0;
+        const c = status?.clean || 0;
+        const hp = status?.happy || 0;
+        return `<div class="pet-list-card" onclick="app.openPetNurture('${pet.id}')">
+          <div class="pet-list-pixel">${renderPixelPet(pet.id, mood)}</div>
+          <div class="pet-list-info">
+            <div class="pet-list-name">${pet.name}</div>
+            <div class="pet-list-bars">
+              <div class="pet-mini-bar"><div class="pet-mini-bar-fill hunger" style="width:${h}%"></div></div>
+              <div class="pet-mini-bar"><div class="pet-mini-bar-fill clean" style="width:${c}%"></div></div>
+              <div class="pet-mini-bar"><div class="pet-mini-bar-fill happy" style="width:${hp}%"></div></div>
+            </div>
+          </div>
+          <div class="pet-list-mood ${mood}"></div>
+        </div>`;
+      }).join('');
+    }
+    document.getElementById('pet-list-modal').classList.add('show');
+  },
+
+  closePetList() {
+    document.getElementById('pet-list-modal').classList.remove('show');
   },
 
   // ---- 打怪兽 ----

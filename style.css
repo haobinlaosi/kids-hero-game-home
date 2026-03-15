@@ -358,6 +358,235 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
   border-radius: 12px;
 }
 
+/* ============ 宠物培养 ============ */
+.pet-nurture-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 30px;
+}
+
+.pet-pixel-container {
+  width: 160px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0f8ff, #e8f4e8);
+  border-radius: 24px;
+  border: 3px solid #e0e0e0;
+  padding: 16px;
+  animation: petFloat 2.5s ease-in-out infinite;
+}
+.pet-pixel-container svg {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes petFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.pet-mood-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #666;
+  text-align: center;
+}
+
+.pet-stats {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 8px;
+}
+
+.pet-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pet-stat-icon {
+  font-size: 22px;
+  width: 32px;
+  text-align: center;
+}
+
+.pet-stat-bar-wrap {
+  flex: 1;
+  height: 18px;
+  background: #f0f0f0;
+  border-radius: 9px;
+  overflow: hidden;
+  position: relative;
+}
+
+.pet-stat-bar {
+  height: 100%;
+  border-radius: 9px;
+  transition: width 0.5s ease;
+  min-width: 4px;
+}
+
+.pet-stat-bar.hunger { background: linear-gradient(90deg, #FF6B6B, #ff8787); }
+.pet-stat-bar.clean { background: linear-gradient(90deg, #74b9ff, #a0d2ff); }
+.pet-stat-bar.happy { background: linear-gradient(90deg, #fdcb6e, #ffe066); }
+
+.pet-stat-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: #888;
+  width: 32px;
+  text-align: right;
+}
+
+.pet-nurture-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  padding: 0 8px;
+}
+
+.pet-action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 8px;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s;
+  min-height: 90px;
+}
+.pet-action-btn:active { transform: scale(0.9); }
+.pet-action-btn .action-icon { font-size: 28px; }
+.pet-action-btn .action-cost { font-size: 11px; opacity: 0.9; margin-top: 2px; }
+
+.pet-action-feed { background: linear-gradient(135deg, #FF6B6B, #ee5a24); }
+.pet-action-bath { background: linear-gradient(135deg, #74b9ff, #0984e3); }
+.pet-action-play { background: linear-gradient(135deg, #fdcb6e, #f39c12); }
+
+/* 宠物列表弹窗 */
+.modal-pet-list {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.pet-list-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pet-list-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.pet-list-card:active { transform: scale(0.95); }
+
+.pet-list-pixel {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+}
+.pet-list-pixel svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pet-list-info {
+  flex: 1;
+}
+
+.pet-list-name {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.pet-list-bars {
+  display: flex;
+  gap: 4px;
+}
+
+.pet-mini-bar {
+  flex: 1;
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.pet-mini-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+.pet-mini-bar-fill.hunger { background: #FF6B6B; }
+.pet-mini-bar-fill.clean { background: #74b9ff; }
+.pet-mini-bar-fill.happy { background: #fdcb6e; }
+
+.pet-list-mood {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pet-list-mood.happy { background: #55efc4; }
+.pet-list-mood.normal { background: #fdcb6e; }
+.pet-list-mood.sad { background: #FF6B6B; }
+
+/* 宠物操作反馈动画 */
+.pet-action-feedback {
+  position: fixed;
+  font-size: 40px;
+  pointer-events: none;
+  z-index: 201;
+  animation: actionFly 0.8s ease-out forwards;
+}
+@keyframes actionFly {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-80px) scale(1.5); }
+}
+
+/* 小屋宠物心情指示 */
+.room-pet-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.pet-mood-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.pet-mood-dot.happy { background: #55efc4; }
+.pet-mood-dot.normal { background: #fdcb6e; }
+.pet-mood-dot.sad { background: #FF6B6B; animation: sadPulse 1s ease-in-out infinite; }
+@keyframes sadPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* 没有宠物时的提示 */
+.pet-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #ccc;
+  font-size: 16px;
+}
+
 /* ============ 庆祝 ============ */
 .celebration { position: fixed; inset: 0; pointer-events: none; z-index: 200; }
 .confetti { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: confettiFall 1.5s ease-out forwards; }
