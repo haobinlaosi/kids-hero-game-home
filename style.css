@@ -276,23 +276,33 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
 }
 
 .room-pets-row {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
-  min-height: 20px;
+  position: absolute;
+  inset: 20px 10px 10px 10px;
   z-index: 2;
+  pointer-events: none;
+}
+
+.room-pet-roam {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: left 1.8s ease-in-out, top 1.8s ease-in-out;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .room-pet {
-  font-size: 32px;
-  animation: petBounce 1.5s ease-in-out infinite;
+  font-size: 30px;
+  animation: petBounce 1.2s ease-in-out infinite;
   filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+  transition: transform 0.4s ease;
 }
 
 @keyframes petBounce {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  50% { transform: translateY(-4px); }
 }
 
 .room-furniture {

@@ -697,6 +697,8 @@ const app = {
     document.getElementById('page-' + page).classList.add('active');
     this.currentPage = page;
     this.updateAllPoints();
+    // 离开小屋页停止漫游
+    if (page !== 'house' && this.petRoamTimer) { clearInterval(this.petRoamTimer); this.petRoamTimer = null; }
   },
 
   // ---- 积分 ----
@@ -850,15 +852,21 @@ const app = {
     document.getElementById('room-character').innerHTML =
       `<img src="${char.img}" alt="${char.name}" style="width:90px;height:110px;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.2))">`;
 
-    // 宠物（角色下方，显示全部，点击进入培养页）
+    // 宠物（在地板区域自由移动）
     const pets = (house.pets || []).map(id => this.findItem(id)).filter(Boolean);
-    document.getElementById('room-pets-row').innerHTML = pets.map(pet => {
+    const petsRow = document.getElementById('room-pets-row');
+    petsRow.innerHTML = pets.map((pet, i) => {
       const mood = this.getPetMood(charId, pet.id);
-      return `<div class="room-pet-wrap" onclick="app.openPetNurture('${pet.id}')">
+      const startX = 10 + (i * 25) % 75;
+      const startY = 10 + ((i * 37) % 60);
+      return `<div class="room-pet-roam" data-pet-id="${pet.id}"
+        style="left:${startX}%;top:${startY}%"
+        onclick="app.openPetNurture('${pet.id}')">
         <span class="room-pet clickable">${pet.icon}</span>
         <span class="pet-mood-dot ${mood}"></span>
       </div>`;
     }).join('');
+    this.startPetRoaming();
 
     // 地板家具
     const furnitureItems = house.items.filter(id => {
@@ -877,6 +885,36 @@ const app = {
     document.getElementById('room-special').innerHTML = specialItems.map(i =>
       `<span class="room-special-item">${i.icon}</span>`
     ).join('');
+  },
+
+  // 宠物漫游动画
+  petRoamTimer: null,
+
+  startPetRoaming() {
+    if (this.petRoamTimer) clearInterval(this.petRoamTimer);
+    const movePets = () => {
+      if (this.currentPage !== 'house') { clearInterval(this.petRoamTimer); this.petRoamTimer = null; return; }
+      const petEls = document.querySelectorAll('.room-pet-roam');
+      petEls.forEach(el => {
+        // 随机决定是否移动（70%概率移动，30%原地停留）
+        if (Math.random() < 0.3) return;
+        const curLeft = parseFloat(el.style.left) || 30;
+        const curTop = parseFloat(el.style.top) || 30;
+        // 随机小幅移动
+        let newLeft = curLeft + (Math.random() - 0.5) * 20;
+        let newTop = curTop + (Math.random() - 0.5) * 15;
+        // 限制在地板范围内
+        newLeft = Math.max(5, Math.min(85, newLeft));
+        newTop = Math.max(5, Math.min(75, newTop));
+        // 根据移动方向翻转
+        const dir = newLeft > curLeft ? 1 : -1;
+        el.querySelector('.room-pet').style.transform = `scaleX(${dir})`;
+        el.style.left = newLeft + '%';
+        el.style.top = newTop + '%';
+      });
+    };
+    // 每2秒移动一次
+    this.petRoamTimer = setInterval(movePets, 2000);
   },
 
   // ---- 商店 ----
