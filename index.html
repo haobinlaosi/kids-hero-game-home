@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <link rel="manifest" href="manifest.json">
   <title>宝贝任务乐园</title>
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 
@@ -66,6 +66,7 @@
           <div class="room-character" id="room-character"></div>
         </div>
         <div class="room-pets-row" id="room-pets-row"></div>
+        <div class="room-aquarium" id="room-aquarium"></div>
         <div class="room-furniture" id="room-furniture"></div>
       </div>
     </div>
@@ -190,7 +191,17 @@
     </div>
   </div>
 
+  <!-- 怪兽墙弹窗 -->
+  <div id="trophy-wall-modal" class="modal">
+    <div class="modal-content modal-trophy-wall">
+      <h3 style="font-size:22px;margin-bottom:12px">🏆 怪兽墙</h3>
+      <p class="trophy-wall-subtitle" id="trophy-wall-subtitle"></p>
+      <div class="trophy-wall-grid" id="trophy-wall-grid"></div>
+      <button class="btn btn-cancel" style="margin-top:12px;width:100%" onclick="app.closeTrophyWall()">关闭</button>
+    </div>
+  </div>
+
   <div id="celebration" class="celebration"></div>
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>

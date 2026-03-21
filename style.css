@@ -227,6 +227,36 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
   display: inline-block;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
+.trophy-wall-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 10px; background: linear-gradient(135deg, rgba(255,215,0,0.4), rgba(255,180,0,0.25));
+  border: 2px solid rgba(255,215,0,0.5); border-radius: 12px;
+  cursor: pointer; font-size: 12px; font-weight: 700; color: #B8860B;
+  z-index: 2; animation: trophyGlow 2s ease-in-out infinite;
+}
+.trophy-wall-btn:active { transform: scale(0.9); }
+.trophy-wall-icon { font-size: 24px; }
+.trophy-wall-label { font-size: 11px; }
+.trophy-wall-count {
+  background: #FF6B6B; color: #fff; font-size: 11px;
+  padding: 1px 6px; border-radius: 10px; min-width: 20px; text-align: center;
+}
+@keyframes trophyGlow {
+  0%, 100% { box-shadow: 0 0 6px rgba(255,215,0,0.3); }
+  50% { box-shadow: 0 0 14px rgba(255,215,0,0.6); }
+}
+.modal-trophy-wall { max-height: 80vh; overflow-y: auto; padding: 24px 16px; }
+.trophy-wall-subtitle { font-size: 16px; color: #888; margin-bottom: 16px; }
+.trophy-wall-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.trophy-wall-card {
+  background: linear-gradient(135deg, #FFF8E1, #FFECB3); border-radius: 14px;
+  padding: 12px 8px; text-align: center;
+  border: 2px solid rgba(255,215,0,0.3); box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.trophy-card-icon { font-size: 36px; margin-bottom: 4px; }
+.trophy-card-name { font-size: 13px; font-weight: 700; color: #555; }
+.trophy-card-count { font-size: 14px; color: #FF6B6B; font-weight: 800; }
+.trophy-card-date { font-size: 11px; color: #aaa; margin-top: 2px; }
 
 /* 地板区域 */
 .room-floor {
@@ -303,6 +333,51 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
 @keyframes petBounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
+}
+
+/* 海洋馆 */
+.room-aquarium {
+  display: none;
+  position: absolute;
+  bottom: 8px; right: 8px;
+  width: 42%; height: 60%;
+  background: linear-gradient(180deg, #87CEEB 0%, #1E90FF 40%, #0066AA 100%);
+  border-radius: 14px;
+  border: 3px solid rgba(135,206,250,0.6);
+  box-shadow: inset 0 0 20px rgba(0,100,200,0.3), 0 4px 12px rgba(0,0,0,0.15);
+  overflow: hidden;
+  z-index: 3;
+}
+.room-aquarium.visible { display: block; }
+.aquarium-label {
+  position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+  font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.85);
+  text-shadow: 0 1px 2px rgba(0,0,80,0.3);
+  z-index: 2; pointer-events: none;
+}
+.aquarium-bubbles {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 80%, rgba(255,255,255,0.15) 0%, transparent 50%),
+    radial-gradient(circle at 70% 30%, rgba(255,255,255,0.1) 0%, transparent 40%),
+    radial-gradient(circle at 50% 60%, rgba(255,255,255,0.08) 0%, transparent 35%);
+}
+.room-aquatic-pet {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  transition: left 2.5s ease-in-out, top 2.5s ease-in-out;
+  pointer-events: auto; cursor: pointer;
+}
+.aquatic-pet-icon {
+  font-size: 28px;
+  animation: fishSwim 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0,0,50,0.2));
+  transition: transform 0.4s ease;
+}
+@keyframes fishSwim {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-4px) rotate(-3deg); }
+  75% { transform: translateY(4px) rotate(3deg); }
 }
 
 .room-furniture {

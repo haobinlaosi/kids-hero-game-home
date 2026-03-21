@@ -87,10 +87,12 @@ const SHOP_ITEMS = {
       { id: 'p_rabbit', name: '兔子', icon: '🐰', price: 50, gif: 'gifs/rabbit.gif' },
       { id: 'p_hamster', name: '仓鼠', icon: '🐹', price: 45, gif: 'gifs/hamster.gif' },
       { id: 'p_bird', name: '小鸟', icon: '🐦', price: 50, gif: 'gifs/bird.gif' },
-      { id: 'p_fish', name: '金鱼', icon: '🐟', price: 40, gif: 'gifs/gold_fish.gif' },
+      { id: 'p_fish', name: '金鱼', icon: '🐟', price: 40, gif: 'gifs/gold_fish.gif', aquatic: true },
       { id: 'p_panda', name: '熊猫', icon: '🐼', price: 70, gif: 'gifs/panada.gif' },
       { id: 'p_dragon', name: '小恐龙', icon: '🦖', price: 80, gif: 'gifs/Tyrannosaurus_rex.gif' },
-      { id: 'p_unicorn', name: '独角兽', icon: '🦄', price: 80, gif: 'gifs/unicorn.gif' }
+      { id: 'p_unicorn', name: '独角兽', icon: '🦄', price: 80, gif: 'gifs/unicorn.gif' },
+      { id: 'p_whale', name: '抹香鲸', icon: '🐋', price: 70, gif: 'gifs/whale.gif', aquatic: true },
+      { id: 'p_shark', name: '鲨鱼宝宝', icon: '🦈', price: 65, gif: 'gifs/shark.gif', aquatic: true }
     ]
   }
 };
@@ -844,18 +846,26 @@ const app = {
       `<span class="room-deco-item">${i.icon}</span>`
     ).join('');
 
-    // 战利品墙（右侧）
+    // 战利品墙（右侧）- 按钮入口
     document.getElementById('room-trophies').innerHTML = trophies.length === 0 ? '' :
-      trophies.slice(-6).map(t => `<span class="room-trophy-item" title="${t.name} ${t.defeatedDate}">${t.icon}</span>`).join('');
+      `<button class="trophy-wall-btn" onclick="app.showTrophyWall()">
+        <span class="trophy-wall-icon">🏆</span>
+        <span class="trophy-wall-label">怪兽墙</span>
+        <span class="trophy-wall-count">${trophies.length}</span>
+      </button>`;
 
     // 角色（中间）
     document.getElementById('room-character').innerHTML =
       `<img src="${char.img}" alt="${char.name}" style="width:90px;height:110px;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.2))">`;
 
-    // 宠物（在地板区域自由移动）
+    // 宠物（分陆地和水生）
     const pets = (house.pets || []).map(id => this.findItem(id)).filter(Boolean);
+    const landPets = pets.filter(p => !p.aquatic);
+    const aquaticPets = pets.filter(p => p.aquatic);
+
+    // 陆地宠物（在地板自由移动）
     const petsRow = document.getElementById('room-pets-row');
-    petsRow.innerHTML = pets.map((pet, i) => {
+    petsRow.innerHTML = landPets.map((pet, i) => {
       const mood = this.getPetMood(charId, pet.id);
       const startX = 10 + (i * 25) % 75;
       const startY = 10 + ((i * 37) % 60);
@@ -866,6 +876,29 @@ const app = {
         <span class="pet-mood-dot ${mood}"></span>
       </div>`;
     }).join('');
+
+    // 海洋馆（水生宠物）
+    const aquariumEl = document.getElementById('room-aquarium');
+    if (aquaticPets.length > 0) {
+      aquariumEl.classList.add('visible');
+      aquariumEl.innerHTML =
+        `<div class="aquarium-label">🐠 海洋馆</div>` +
+        `<div class="aquarium-bubbles"></div>` +
+        aquaticPets.map((pet, i) => {
+          const mood = this.getPetMood(charId, pet.id);
+          const startX = 10 + (i * 30) % 70;
+          const startY = 15 + (i * 25) % 55;
+          return `<div class="room-aquatic-pet" data-pet-id="${pet.id}"
+            style="left:${startX}%;top:${startY}%"
+            onclick="app.openPetNurture('${pet.id}')">
+            <span class="aquatic-pet-icon clickable">${pet.icon}</span>
+            <span class="pet-mood-dot ${mood}"></span>
+          </div>`;
+        }).join('');
+    } else {
+      aquariumEl.classList.remove('visible');
+      aquariumEl.innerHTML = '';
+    }
     this.startPetRoaming();
 
     // 地板家具
@@ -913,8 +946,25 @@ const app = {
         el.style.top = newTop + '%';
       });
     };
-    // 每2秒移动一次
-    this.petRoamTimer = setInterval(movePets, 2000);
+    const moveAquatic = () => {
+      if (this.currentPage !== 'house') return;
+      const aquaEls = document.querySelectorAll('.room-aquatic-pet');
+      aquaEls.forEach(el => {
+        if (Math.random() < 0.3) return;
+        const curLeft = parseFloat(el.style.left) || 30;
+        const curTop = parseFloat(el.style.top) || 30;
+        let newLeft = curLeft + (Math.random() - 0.5) * 15;
+        let newTop = curTop + (Math.random() - 0.5) * 12;
+        newLeft = Math.max(5, Math.min(85, newLeft));
+        newTop = Math.max(10, Math.min(75, newTop));
+        const dir = newLeft > curLeft ? 1 : -1;
+        el.querySelector('.aquatic-pet-icon').style.transform = `scaleX(${dir})`;
+        el.style.left = newLeft + '%';
+        el.style.top = newTop + '%';
+      });
+    };
+    // 每2秒移动一次（陆地），每2.5秒移动一次（水生，更缓慢）
+    this.petRoamTimer = setInterval(() => { movePets(); moveAquatic(); }, 2000);
   },
 
   // ---- 商店 ----
@@ -1050,7 +1100,7 @@ const app = {
     const moodClass = { happy: 'mood-happy', normal: 'mood-normal', sad: 'mood-sad' };
     const moodEffects = { happy: '✨', normal: '', sad: '💧' };
     document.getElementById('pet-emoji-display').innerHTML =
-      `<span class="pet-big-emoji ${moodClass[mood]}">${pet.icon}</span>` +
+      `<span class="pet-big-emoji ${moodClass[mood]}" style="cursor:pointer" onclick="app.showGif('${pet.gif}','${pet.name}',3000)">${pet.icon}</span>` +
       (moodEffects[mood] ? `<span class="pet-mood-effect">${moodEffects[mood]}</span>` : '');
     document.getElementById('pet-anim-layer').innerHTML = '';
 
@@ -1244,6 +1294,32 @@ const app = {
 
   closePetList() {
     document.getElementById('pet-list-modal').classList.remove('show');
+  },
+
+  showTrophyWall() {
+    const trophies = this.data.battle.trophies;
+    document.getElementById('trophy-wall-subtitle').textContent =
+      `已打败 ${trophies.length} 只怪兽！`;
+    const grouped = {};
+    trophies.forEach(t => {
+      if (!grouped[t.id]) grouped[t.id] = { ...t, count: 0, dates: [] };
+      grouped[t.id].count++;
+      grouped[t.id].dates.push(t.defeatedDate);
+    });
+    document.getElementById('trophy-wall-grid').innerHTML =
+      Object.values(grouped).map(t => `
+        <div class="trophy-wall-card">
+          <div class="trophy-card-icon">${t.icon}</div>
+          <div class="trophy-card-name">${t.name}</div>
+          <div class="trophy-card-count">x${t.count}</div>
+          <div class="trophy-card-date">${t.dates[t.dates.length - 1]}</div>
+        </div>
+      `).join('');
+    document.getElementById('trophy-wall-modal').classList.add('show');
+  },
+
+  closeTrophyWall() {
+    document.getElementById('trophy-wall-modal').classList.remove('show');
   },
 
   // ---- 打怪兽 ----
