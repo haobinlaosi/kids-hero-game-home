@@ -552,6 +552,10 @@ function renderPixelPet(petId, mood) {
   return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated">${rects}</svg>`;
 }
 
+// ============ 云同步配置 ============
+const SYNC_URL = 'https://kids-hero-sync.yiyuluzhb.workers.dev';
+const SYNC_TOKEN = 'hero2026safe';
+
 // ============ 应用主类 ============
 
 const app = {
@@ -563,12 +567,14 @@ const app = {
   shopCategory: 'furniture',
   battleAnimating: false,
   currentNurturePetId: null,
+  _syncTimer: null,
 
   // ---- 初始化 ----
   init() {
     this.loadData();
     this.renderHome();
     this.updateAllPoints();
+    this._loadFromCloud();
   },
 
   // ---- 数据管理 ----
@@ -605,26 +611,7 @@ const app = {
       };
       this.saveData();
     }
-    // 兼容性
-    if (!this.data.battle) this.data.battle = { currentMonster: null, lastFreeAttackDate: null, lastPetAttackDates: {}, trophies: [] };
-    if (!this.data.battle.trophies) this.data.battle.trophies = [];
-    if (!this.data.battle.lastPetAttackDates) this.data.battle.lastPetAttackDates = {};
-    if (!this.data.houses) this.data.houses = { leidi: this.getDefaultHouse(), diga: this.getDefaultHouse() };
-    for (const k of Object.keys(CHARACTERS)) {
-      if (!this.data.houses[k]) this.data.houses[k] = this.getDefaultHouse();
-      if (!this.data.houses[k].pets) this.data.houses[k].pets = [];
-    }
-    // 宠物培养兼容
-    if (!this.data.petStatus) this.data.petStatus = {};
-    for (const charId of Object.keys(CHARACTERS)) {
-      if (!this.data.petStatus[charId]) this.data.petStatus[charId] = {};
-      const pets = this.data.houses[charId]?.pets || [];
-      for (const petId of pets) {
-        if (!this.data.petStatus[charId][petId]) {
-          this.initPetStatus(charId, petId);
-        }
-      }
-    }
+    this._applyDataCompat();
     this.decayAllPetStats();
     if (!this.data.battle.currentMonster) this.spawnMonster();
   },
@@ -677,7 +664,89 @@ const app = {
   },
 
   saveData() {
+    this.data._lastSync = Date.now();
     localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
+    clearTimeout(this._syncTimer);
+    this._syncTimer = setTimeout(() => this._syncToCloud(), 2000);
+  },
+
+  // ---- 数据兼容性修复 ----
+  _applyDataCompat() {
+    if (!this.data.battle) this.data.battle = { currentMonster: null, lastFreeAttackDate: null, lastPetAttackDates: {}, trophies: [] };
+    if (!this.data.battle.trophies) this.data.battle.trophies = [];
+    if (!this.data.battle.lastPetAttackDates) this.data.battle.lastPetAttackDates = {};
+    if (!this.data.houses) this.data.houses = { leidi: this.getDefaultHouse(), diga: this.getDefaultHouse() };
+    for (const k of Object.keys(CHARACTERS)) {
+      if (!this.data.houses[k]) this.data.houses[k] = this.getDefaultHouse();
+      if (!this.data.houses[k].pets) this.data.houses[k].pets = [];
+    }
+    if (!this.data.petStatus) this.data.petStatus = {};
+    for (const charId of Object.keys(CHARACTERS)) {
+      if (!this.data.petStatus[charId]) this.data.petStatus[charId] = {};
+      const pets = this.data.houses[charId]?.pets || [];
+      for (const petId of pets) {
+        if (!this.data.petStatus[charId][petId]) {
+          this.initPetStatus(charId, petId);
+        }
+      }
+    }
+  },
+
+  // ---- 云同步 ----
+  async _syncToCloud() {
+    this._updateSyncStatus('syncing');
+    try {
+      const res = await fetch(SYNC_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': SYNC_TOKEN },
+        body: JSON.stringify(this.data),
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      this._updateSyncStatus('ok');
+    } catch (e) {
+      console.warn('[Sync] 上传失败:', e);
+      this._updateSyncStatus('error');
+    }
+  },
+
+  async _loadFromCloud() {
+    this._updateSyncStatus('syncing');
+    try {
+      const res = await fetch(SYNC_URL, {
+        headers: { 'X-Auth-Token': SYNC_TOKEN },
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const cloud = await res.json();
+      if (cloud && cloud._lastSync) {
+        const localTs = this.data._lastSync || 0;
+        if (cloud._lastSync > localTs) {
+          this.data = cloud;
+          this._applyDataCompat();
+          this.decayAllPetStats();
+          if (!this.data.battle.currentMonster) this.spawnMonster();
+          localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
+          this.renderHome();
+          this.updateAllPoints();
+        } else {
+          this._syncToCloud();
+        }
+      } else if (this.data._lastSync) {
+        this._syncToCloud();
+      }
+      this._updateSyncStatus('ok');
+    } catch (e) {
+      console.warn('[Sync] 加载失败:', e);
+      this._updateSyncStatus('error');
+    }
+  },
+
+  _updateSyncStatus(status) {
+    const el = document.getElementById('sync-indicator');
+    if (!el) return;
+    el.className = 'sync-indicator ' + status;
+    if (status === 'syncing') { el.textContent = '☁️'; }
+    else if (status === 'ok') { el.textContent = '☁️'; }
+    else if (status === 'error') { el.textContent = '⚠️'; }
   },
 
   // ---- 页面导航 ----
