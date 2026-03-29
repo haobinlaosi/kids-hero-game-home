@@ -561,10 +561,15 @@ const SFX = {
   ctx: null,
   init() {
     if (this.ctx) return;
-    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+    } catch(e) {}
   },
   play(type) {
+    if (!this.ctx) this.init();
     if (!this.ctx) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
     switch(type) {
       case 'task': this._beep(523,0.1,'sine'); this._beep(659,0.1,'sine',0.12); this._beep(784,0.15,'sine',0.24); break;
       case 'penalty': this._beep(300,0.15,'sawtooth'); this._beep(200,0.25,'sawtooth',0.15); break;
