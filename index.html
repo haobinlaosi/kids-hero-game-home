@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <link rel="manifest" href="manifest.json">
   <title>宝贝任务乐园</title>
-  <link rel="stylesheet" href="style.css?v=14">
+  <link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
 
@@ -67,12 +67,12 @@
           <div class="room-character" id="room-character"></div>
         </div>
         <div class="room-pets-row" id="room-pets-row"></div>
-        <div class="room-aquarium" id="room-aquarium"></div>
         <div class="room-furniture" id="room-furniture"></div>
       </div>
     </div>
     <div class="house-buttons">
       <button class="btn btn-small btn-switch" onclick="app.switchHouseCharacter()">切换小屋</button>
+      <button class="btn btn-small" onclick="app.showFloorPicker()" style="background:linear-gradient(135deg,#a29bfe,#6c5ce7);color:#fff">🎨 换装</button>
       <button class="btn btn-small" onclick="app.showPetList()" style="background:linear-gradient(135deg,#55efc4,#00b894);color:#fff">🐾 宠物</button>
       <button class="btn btn-small btn-confirm" onclick="app.goToPage('shop')">&#127873; 商店</button>
     </div>
@@ -202,7 +202,16 @@
     </div>
   </div>
 
+  <!-- 换装弹窗 -->
+  <div id="floor-picker-modal" class="modal">
+    <div class="modal-content modal-floor-picker">
+      <h3 style="font-size:22px;margin-bottom:12px">🎨 更换地板墙纸</h3>
+      <div class="floor-picker-grid" id="floor-picker-grid"></div>
+      <button class="btn btn-cancel" style="margin-top:12px;width:100%" onclick="app.closeFloorPicker()">关闭</button>
+    </div>
+  </div>
+
   <div id="celebration" class="celebration"></div>
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>

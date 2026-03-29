@@ -24,31 +24,31 @@ const SHOP_ITEMS = {
   furniture: {
     label: '家具', icon: '🛋️', zone: 'floor',
     items: [
-      { id: 'f_sofa', name: '小沙发', icon: '🛋️', price: 20 },
-      { id: 'f_table', name: '小桌子', icon: '🪑', price: 15 },
-      { id: 'f_bed', name: '小床', icon: '🛏️', price: 25 },
-      { id: 'f_shelf', name: '书架', icon: '📚', price: 20 },
-      { id: 'f_tv', name: '电视', icon: '📺', price: 30 },
-      { id: 'f_lamp', name: '台灯', icon: '💡', price: 15 },
-      { id: 'f_bath', name: '浴缸', icon: '🛁', price: 30 },
-      { id: 'f_piano', name: '钢琴', icon: '🎹', price: 35 },
-      { id: 'f_computer', name: '电脑', icon: '💻', price: 25 },
-      { id: 'f_fridge', name: '冰箱', icon: '🧊', price: 20 }
+      { id: 'f_sofa', name: '小沙发', icon: '🛋️', price: 20, pos: { left:'3%', bottom:'32%', size:'34px' } },
+      { id: 'f_table', name: '小桌子', icon: '🪑', price: 15, pos: { left:'25%', bottom:'28%', size:'28px' } },
+      { id: 'f_bed', name: '小床', icon: '🛏️', price: 25, pos: { right:'3%', bottom:'35%', size:'34px' } },
+      { id: 'f_shelf', name: '书架', icon: '📚', price: 20, pos: { right:'5%', bottom:'65%', size:'28px' } },
+      { id: 'f_tv', name: '电视', icon: '📺', price: 30, pos: { left:'42%', bottom:'68%', size:'30px' } },
+      { id: 'f_lamp', name: '台灯', icon: '💡', price: 15, pos: { left:'2%', bottom:'58%', size:'24px' } },
+      { id: 'f_bath', name: '浴缸', icon: '🛁', price: 30, pos: { right:'25%', bottom:'5%', size:'30px' } },
+      { id: 'f_piano', name: '钢琴', icon: '🎹', price: 35, pos: { left:'12%', bottom:'5%', size:'32px' } },
+      { id: 'f_computer', name: '电脑', icon: '💻', price: 25, pos: { right:'18%', bottom:'55%', size:'26px' } },
+      { id: 'f_fridge', name: '冰箱', icon: '🧊', price: 20, pos: { right:'2%', bottom:'55%', size:'28px' } }
     ]
   },
   wallDecor: {
     label: '墙饰', icon: '🖼️', zone: 'wall',
     items: [
-      { id: 'w_paint', name: '挂画', icon: '🖼️', price: 10 },
-      { id: 'w_clock', name: '时钟', icon: '🕐', price: 15 },
-      { id: 'w_photo', name: '照片墙', icon: '📷', price: 15 },
-      { id: 'w_cert', name: '奖状', icon: '📜', price: 20 },
-      { id: 'w_mirror', name: '镜子', icon: '🪞', price: 15 },
-      { id: 'w_flag', name: '小旗帜', icon: '🚩', price: 10 },
-      { id: 'w_map', name: '世界地图', icon: '🗺️', price: 20 },
-      { id: 'w_note', name: '音符墙', icon: '🎵', price: 15 },
-      { id: 'w_heart', name: '爱心墙', icon: '❤️', price: 10 },
-      { id: 'w_star', name: '星星灯', icon: '🌟', price: 20 }
+      { id: 'w_paint', name: '挂画', icon: '🖼️', price: 10, pos: { left:'5%', top:'12%', size:'28px' } },
+      { id: 'w_clock', name: '时钟', icon: '🕐', price: 15, pos: { left:'22%', top:'8%', size:'24px' } },
+      { id: 'w_photo', name: '照片墙', icon: '📷', price: 15, pos: { right:'22%', top:'10%', size:'24px' } },
+      { id: 'w_cert', name: '奖状', icon: '📜', price: 20, pos: { left:'38%', top:'5%', size:'24px' } },
+      { id: 'w_mirror', name: '镜子', icon: '🪞', price: 15, pos: { right:'5%', top:'12%', size:'26px' } },
+      { id: 'w_flag', name: '小旗帜', icon: '🚩', price: 10, pos: { left:'5%', top:'55%', size:'22px' } },
+      { id: 'w_map', name: '世界地图', icon: '🗺️', price: 20, pos: { right:'5%', top:'50%', size:'26px' } },
+      { id: 'w_note', name: '音符墙', icon: '🎵', price: 15, pos: { left:'22%', top:'50%', size:'22px' } },
+      { id: 'w_heart', name: '爱心墙', icon: '❤️', price: 10, pos: { right:'22%', top:'48%', size:'24px' } },
+      { id: 'w_star', name: '星星灯', icon: '🌟', price: 20, pos: { left:'55%', top:'5%', size:'24px' } }
     ]
   },
   floor: {
@@ -67,16 +67,16 @@ const SHOP_ITEMS = {
   special: {
     label: '特殊装饰', icon: '✨', zone: 'special',
     items: [
-      { id: 's_tree', name: '圣诞树', icon: '🎄', price: 50 },
-      { id: 's_balloon', name: '气球', icon: '🎈', price: 40 },
-      { id: 's_lights', name: '彩灯', icon: '🎆', price: 45 },
-      { id: 's_fountain', name: '喷泉', icon: '⛲', price: 60 },
-      { id: 's_flower', name: '花园', icon: '🌸', price: 40 },
-      { id: 's_rocket', name: '火箭', icon: '🚀', price: 55 },
-      { id: 's_rainbow', name: '彩虹桥', icon: '🌈', price: 50 },
-      { id: 's_trophy', name: '奖杯', icon: '🏆', price: 45 },
-      { id: 's_castle', name: '小城堡', icon: '🏰', price: 60 },
-      { id: 's_ferris', name: '摩天轮', icon: '🎡', price: 55 }
+      { id: 's_tree', name: '圣诞树', icon: '🎄', price: 50, pos: { right:'3%', bottom:'8%', size:'36px' } },
+      { id: 's_balloon', name: '气球', icon: '🎈', price: 40, pos: { left:'8%', top:'5%', size:'30px' } },
+      { id: 's_lights', name: '彩灯', icon: '🎆', price: 45, pos: { left:'50%', top:'2%', size:'28px' } },
+      { id: 's_fountain', name: '喷泉', icon: '⛲', price: 60, pos: { left:'42%', bottom:'3%', size:'32px' } },
+      { id: 's_flower', name: '花园', icon: '🌸', price: 40, pos: { left:'3%', bottom:'5%', size:'28px' } },
+      { id: 's_rocket', name: '火箭', icon: '🚀', price: 55, pos: { right:'8%', top:'3%', size:'30px' } },
+      { id: 's_rainbow', name: '彩虹桥', icon: '🌈', price: 50, pos: { left:'30%', top:'0%', size:'34px' } },
+      { id: 's_trophy', name: '奖杯', icon: '🏆', price: 45, pos: { right:'30%', bottom:'60%', size:'26px' } },
+      { id: 's_castle', name: '小城堡', icon: '🏰', price: 60, pos: { right:'3%', bottom:'55%', size:'34px' } },
+      { id: 's_ferris', name: '摩天轮', icon: '🎡', price: 55, pos: { left:'3%', bottom:'50%', size:'34px' } }
     ]
   },
   pet: {
@@ -679,6 +679,14 @@ const app = {
     for (const k of Object.keys(CHARACTERS)) {
       if (!this.data.houses[k]) this.data.houses[k] = this.getDefaultHouse();
       if (!this.data.houses[k].pets) this.data.houses[k].pets = [];
+      // 地板数据迁移: string → { current, owned }
+      const h = this.data.houses[k];
+      if (typeof h.floor === 'string' || h.floor === null) {
+        const old = h.floor;
+        h.floor = { current: old, owned: old ? [old] : [] };
+      }
+      if (!h.floor) h.floor = { current: null, owned: [] };
+      if (!h.floor.owned) h.floor.owned = [];
     }
     if (!this.data.petStatus) this.data.petStatus = {};
     for (const charId of Object.keys(CHARACTERS)) {
@@ -900,20 +908,20 @@ const app = {
     document.getElementById('house-title').textContent = char.name + '的小屋';
 
     // 地板墙纸
-    const floorItem = house.floor ? this.findItem(house.floor) : null;
+    const floorId = house.floor && house.floor.current ? house.floor.current : null;
+    const floorItem = floorId ? this.findItem(floorId) : null;
     const wallEl = document.getElementById('room-wall');
     const floorEl = document.getElementById('room-floor');
     wallEl.style.background = floorItem ? floorItem.wallBg : '';
     floorEl.style.background = floorItem ? floorItem.floorBg : '';
 
-    // 墙上装饰（左侧）
-    const wallItems = house.items.filter(id => {
-      const cat = this.findItemCategory(id);
-      return cat === 'wallDecor';
-    }).map(id => this.findItem(id)).filter(Boolean);
-    document.getElementById('room-wall-decor').innerHTML = wallItems.map(i =>
-      `<span class="room-deco-item">${i.icon}</span>`
-    ).join('');
+    // 墙上装饰 — 绝对定位
+    const wallItems = house.items.filter(id => this.findItemCategory(id) === 'wallDecor')
+      .map(id => this.findItem(id)).filter(Boolean);
+    document.getElementById('room-wall-decor').innerHTML = wallItems.map(i => {
+      const p = i.pos || {};
+      return `<span class="room-item-placed" style="${p.left?'left:'+p.left+';':''}${p.right?'right:'+p.right+';':''}${p.top?'top:'+p.top+';':''}${p.bottom?'bottom:'+p.bottom+';':''}font-size:${p.size||'26px'}">${i.icon}</span>`;
+    }).join('');
 
     // 战利品墙（右侧）- 按钮入口
     document.getElementById('room-trophies').innerHTML = trophies.length === 0 ? '' :
@@ -927,66 +935,37 @@ const app = {
     document.getElementById('room-character').innerHTML =
       `<img src="${char.img}" alt="${char.name}" style="width:90px;height:110px;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.2))">`;
 
-    // 宠物（分陆地和水生）
+    // 所有宠物统一漫游（不再区分水生/陆地）
     const pets = (house.pets || []).map(id => this.findItem(id)).filter(Boolean);
-    const landPets = pets.filter(p => !p.aquatic);
-    const aquaticPets = pets.filter(p => p.aquatic);
-
-    // 陆地宠物（在地板自由移动）
     const petsRow = document.getElementById('room-pets-row');
-    petsRow.innerHTML = landPets.map((pet, i) => {
+    petsRow.innerHTML = pets.map((pet, i) => {
       const mood = this.getPetMood(charId, pet.id);
       const startX = 10 + (i * 25) % 75;
       const startY = 10 + ((i * 37) % 60);
-      return `<div class="room-pet-roam" data-pet-id="${pet.id}"
+      return `<div class="room-pet-roam ${pet.aquatic ? 'aquatic' : ''}" data-pet-id="${pet.id}"
         style="left:${startX}%;top:${startY}%"
         onclick="app.openPetNurture('${pet.id}')">
         <span class="room-pet clickable">${pet.icon}</span>
         <span class="pet-mood-dot ${mood}"></span>
       </div>`;
     }).join('');
-
-    // 海洋馆（水生宠物）
-    const aquariumEl = document.getElementById('room-aquarium');
-    if (aquaticPets.length > 0) {
-      aquariumEl.classList.add('visible');
-      aquariumEl.innerHTML =
-        `<div class="aquarium-label">🐠 海洋馆</div>` +
-        `<div class="aquarium-bubbles"></div>` +
-        aquaticPets.map((pet, i) => {
-          const mood = this.getPetMood(charId, pet.id);
-          const startX = 10 + (i * 30) % 70;
-          const startY = 15 + (i * 25) % 55;
-          return `<div class="room-aquatic-pet" data-pet-id="${pet.id}"
-            style="left:${startX}%;top:${startY}%"
-            onclick="app.openPetNurture('${pet.id}')">
-            <span class="aquatic-pet-icon clickable">${pet.icon}</span>
-            <span class="pet-mood-dot ${mood}"></span>
-          </div>`;
-        }).join('');
-    } else {
-      aquariumEl.classList.remove('visible');
-      aquariumEl.innerHTML = '';
-    }
     this.startPetRoaming();
 
-    // 地板家具
-    const furnitureItems = house.items.filter(id => {
-      const cat = this.findItemCategory(id);
-      return cat === 'furniture';
-    }).map(id => this.findItem(id)).filter(Boolean);
-    document.getElementById('room-furniture').innerHTML = furnitureItems.map(i =>
-      `<span class="room-furniture-item">${i.icon}</span>`
-    ).join('');
+    // 家具 — 绝对定位到地板
+    const furnitureItems = house.items.filter(id => this.findItemCategory(id) === 'furniture')
+      .map(id => this.findItem(id)).filter(Boolean);
+    document.getElementById('room-furniture').innerHTML = furnitureItems.map(i => {
+      const p = i.pos || {};
+      return `<span class="room-item-placed" style="${p.left?'left:'+p.left+';':''}${p.right?'right:'+p.right+';':''}${p.top?'top:'+p.top+';':''}${p.bottom?'bottom:'+p.bottom+';':''}font-size:${p.size||'28px'}">${i.icon}</span>`;
+    }).join('');
 
-    // 特殊装饰（角落）
-    const specialItems = house.items.filter(id => {
-      const cat = this.findItemCategory(id);
-      return cat === 'special';
-    }).map(id => this.findItem(id)).filter(Boolean);
-    document.getElementById('room-special').innerHTML = specialItems.map(i =>
-      `<span class="room-special-item">${i.icon}</span>`
-    ).join('');
+    // 特殊装饰 — 绝对定位到地板
+    const specialItems = house.items.filter(id => this.findItemCategory(id) === 'special')
+      .map(id => this.findItem(id)).filter(Boolean);
+    document.getElementById('room-special').innerHTML = specialItems.map(i => {
+      const p = i.pos || {};
+      return `<span class="room-item-placed" style="${p.left?'left:'+p.left+';':''}${p.right?'right:'+p.right+';':''}${p.top?'top:'+p.top+';':''}${p.bottom?'bottom:'+p.bottom+';':''}font-size:${p.size||'26px'}">${i.icon}</span>`;
+    }).join('');
   },
 
   // 宠物漫游动画
@@ -994,46 +973,22 @@ const app = {
 
   startPetRoaming() {
     if (this.petRoamTimer) clearInterval(this.petRoamTimer);
-    const movePets = () => {
+    this.petRoamTimer = setInterval(() => {
       if (this.currentPage !== 'house') { clearInterval(this.petRoamTimer); this.petRoamTimer = null; return; }
-      const petEls = document.querySelectorAll('.room-pet-roam');
-      petEls.forEach(el => {
-        // 随机决定是否移动（70%概率移动，30%原地停留）
+      document.querySelectorAll('.room-pet-roam').forEach(el => {
         if (Math.random() < 0.3) return;
         const curLeft = parseFloat(el.style.left) || 30;
         const curTop = parseFloat(el.style.top) || 30;
-        // 随机小幅移动
         let newLeft = curLeft + (Math.random() - 0.5) * 20;
         let newTop = curTop + (Math.random() - 0.5) * 15;
-        // 限制在地板范围内
         newLeft = Math.max(5, Math.min(85, newLeft));
         newTop = Math.max(5, Math.min(75, newTop));
-        // 根据移动方向翻转
         const dir = newLeft > curLeft ? 1 : -1;
         el.querySelector('.room-pet').style.transform = `scaleX(${dir})`;
         el.style.left = newLeft + '%';
         el.style.top = newTop + '%';
       });
-    };
-    const moveAquatic = () => {
-      if (this.currentPage !== 'house') return;
-      const aquaEls = document.querySelectorAll('.room-aquatic-pet');
-      aquaEls.forEach(el => {
-        if (Math.random() < 0.3) return;
-        const curLeft = parseFloat(el.style.left) || 30;
-        const curTop = parseFloat(el.style.top) || 30;
-        let newLeft = curLeft + (Math.random() - 0.5) * 15;
-        let newTop = curTop + (Math.random() - 0.5) * 12;
-        newLeft = Math.max(5, Math.min(85, newLeft));
-        newTop = Math.max(10, Math.min(75, newTop));
-        const dir = newLeft > curLeft ? 1 : -1;
-        el.querySelector('.aquatic-pet-icon').style.transform = `scaleX(${dir})`;
-        el.style.left = newLeft + '%';
-        el.style.top = newTop + '%';
-      });
-    };
-    // 每2秒移动一次（陆地），每2.5秒移动一次（水生，更缓慢）
-    this.petRoamTimer = setInterval(() => { movePets(); moveAquatic(); }, 2000);
+    }, 2000);
   },
 
   // ---- 商店 ----
@@ -1048,7 +1003,8 @@ const app = {
     const items = SHOP_ITEMS[this.shopCategory].items;
     const charId = this.data.currentCharacter;
     const house = this.data.houses[charId];
-    const ownedIds = [...house.items, house.floor, ...(house.pets || [])].filter(Boolean);
+    const floorOwned = house.floor && house.floor.owned ? house.floor.owned : [];
+    const ownedIds = [...house.items, ...floorOwned, ...(house.pets || [])].filter(Boolean);
     const char = CHARACTERS[charId];
 
     // 商店提示
@@ -1091,7 +1047,8 @@ const app = {
   tryBuy(itemId) {
     const charId = this.data.currentCharacter;
     const house = this.data.houses[charId];
-    const allOwned = [...house.items, house.floor, ...(house.pets || [])].filter(Boolean);
+    const floorOwned = house.floor && house.floor.owned ? house.floor.owned : [];
+    const allOwned = [...house.items, ...floorOwned, ...(house.pets || [])].filter(Boolean);
     if (allOwned.includes(itemId)) return;
 
     const item = this.findItem(itemId);
@@ -1123,7 +1080,9 @@ const app = {
     const cat = this.findItemCategory(item.id);
 
     if (cat === 'floor') {
-      house.floor = item.id;
+      if (!house.floor || !house.floor.owned) house.floor = { current: null, owned: [] };
+      house.floor.owned.push(item.id);
+      house.floor.current = item.id;
     } else if (cat === 'pet') {
       house.pets.push(item.id);
       this.initPetStatus(charId, item.id);
@@ -1389,6 +1348,42 @@ const app = {
 
   closeTrophyWall() {
     document.getElementById('trophy-wall-modal').classList.remove('show');
+  },
+
+  // ---- 换装系统 ----
+  showFloorPicker() {
+    const house = this.data.houses[this.data.currentCharacter];
+    const owned = house.floor && house.floor.owned ? house.floor.owned : [];
+    if (owned.length === 0) {
+      this.showToast('还没有地板哦，去商店逛逛吧！');
+      return;
+    }
+    const current = house.floor.current;
+    const grid = document.getElementById('floor-picker-grid');
+    grid.innerHTML = owned.map(id => {
+      const item = this.findItem(id);
+      if (!item) return '';
+      const isActive = id === current;
+      return `<div class="floor-picker-item ${isActive ? 'active' : ''}" onclick="app.switchFloor('${id}')">
+        <div class="floor-picker-preview" style="background:linear-gradient(180deg,${item.wallBg},${item.floorBg})"></div>
+        <div class="floor-picker-icon">${item.icon}</div>
+        <div class="floor-picker-name">${item.name}</div>
+        <div class="floor-picker-status">${isActive ? '使用中' : '切换'}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('floor-picker-modal').classList.add('show');
+  },
+
+  switchFloor(floorId) {
+    const house = this.data.houses[this.data.currentCharacter];
+    house.floor.current = floorId;
+    this.saveData();
+    this.renderHouse();
+    this.closeFloorPicker();
+  },
+
+  closeFloorPicker() {
+    document.getElementById('floor-picker-modal').classList.remove('show');
   },
 
   // ---- 打怪兽 ----
