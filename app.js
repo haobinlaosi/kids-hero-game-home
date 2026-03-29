@@ -559,16 +559,29 @@ const SYNC_TOKEN = 'hero2026safe';
 // ============ 音效引擎 ============
 const SFX = {
   ctx: null,
+  unlocked: false,
   init() {
     if (this.ctx) return;
     try {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-      if (this.ctx.state === 'suspended') this.ctx.resume();
-    } catch(e) {}
+    } catch(e) { return; }
+    // 微信浏览器必须在用户交互中播放一个静音buffer才能解锁音频
+    this._unlock();
+  },
+  _unlock() {
+    if (this.unlocked || !this.ctx) return;
+    const buf = this.ctx.createBuffer(1, 1, 22050);
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(this.ctx.destination);
+    src.start(0);
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    this.unlocked = true;
   },
   play(type) {
     if (!this.ctx) this.init();
     if (!this.ctx) return;
+    if (!this.unlocked) this._unlock();
     if (this.ctx.state === 'suspended') this.ctx.resume();
     switch(type) {
       case 'task': this._beep(523,0.1,'sine'); this._beep(659,0.1,'sine',0.12); this._beep(784,0.15,'sine',0.24); break;
@@ -632,7 +645,13 @@ const app = {
 
   // ---- 初始化 ----
   init() {
+    document.addEventListener('touchstart', () => SFX.init(), { once: true });
     document.addEventListener('click', () => SFX.init(), { once: true });
+    if (typeof WeixinJSBridge !== 'undefined') {
+      WeixinJSBridge.invoke('getNetworkType', {}, () => SFX.init());
+    } else {
+      document.addEventListener('WeixinJSBridgeReady', () => SFX.init(), { once: true });
+    }
     this.loadData();
     this.renderHome();
     this.updateAllPoints();
