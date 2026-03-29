@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <link rel="manifest" href="manifest.json">
   <title>宝贝任务乐园</title>
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
 
@@ -36,6 +36,7 @@
     <div class="page-header">
       <button class="btn-back" onclick="app.goToPage('home')">&#8592;</button>
       <h2>任务清单</h2>
+      <button class="btn-manage-task" onclick="app.manageTasksPin()">&#9881;</button>
       <div class="points-display points-small"><span class="star-icon">&#9733;</span> <span class="pts-val">0</span></div>
     </div>
     <div class="task-list" id="task-list"></div>
@@ -211,7 +212,16 @@
     </div>
   </div>
 
+  <!-- 任务管理弹窗 -->
+  <div id="task-mgr-modal" class="modal">
+    <div class="modal-content modal-task-mgr">
+      <h3 style="font-size:22px;margin-bottom:12px">&#9881; 管理任务</h3>
+      <div class="task-mgr-scroll" id="task-mgr-content"></div>
+      <button class="btn btn-cancel" style="margin-top:12px;width:100%" onclick="app.closeTaskManager()">完成</button>
+    </div>
+  </div>
+
   <div id="celebration" class="celebration"></div>
-  <script src="app.js?v=15"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>

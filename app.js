@@ -556,6 +556,62 @@ function renderPixelPet(petId, mood) {
 const SYNC_URL = 'https://kids-hero-sync.yiyuluzhb.workers.dev';
 const SYNC_TOKEN = 'hero2026safe';
 
+// ============ 音效引擎 ============
+const SFX = {
+  ctx: null,
+  init() {
+    if (this.ctx) return;
+    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  },
+  play(type) {
+    if (!this.ctx) return;
+    switch(type) {
+      case 'task': this._beep(523,0.1,'sine'); this._beep(659,0.1,'sine',0.12); this._beep(784,0.15,'sine',0.24); break;
+      case 'penalty': this._beep(300,0.15,'sawtooth'); this._beep(200,0.25,'sawtooth',0.15); break;
+      case 'attack': this._beep(150,0.08,'square'); this._noise(0.08); break;
+      case 'bigAttack': this._sweep(200,900,0.3); this._noise(0.15); break;
+      case 'victory': this._beep(523,0.12,'sine'); this._beep(659,0.12,'sine',0.15); this._beep(784,0.12,'sine',0.3); this._beep(1047,0.25,'sine',0.45); break;
+      case 'buy': this._beep(880,0.06,'sine'); this._beep(1100,0.1,'sine',0.08); break;
+      case 'feed': this._beep(400,0.1,'triangle'); this._beep(500,0.1,'triangle',0.12); break;
+    }
+  },
+  _beep(freq, dur, type, delay) {
+    delay = delay || 0;
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = type || 'sine';
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.15, this.ctx.currentTime + delay);
+    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + delay + dur);
+    o.connect(g); g.connect(this.ctx.destination);
+    o.start(this.ctx.currentTime + delay);
+    o.stop(this.ctx.currentTime + delay + dur + 0.05);
+  },
+  _noise(dur) {
+    const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * dur, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.1;
+    const s = this.ctx.createBufferSource();
+    const g = this.ctx.createGain();
+    s.buffer = buf;
+    g.gain.setValueAtTime(0.12, this.ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+    s.connect(g); g.connect(this.ctx.destination);
+    s.start(); s.stop(this.ctx.currentTime + dur);
+  },
+  _sweep(f1, f2, dur) {
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(f1, this.ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(f2, this.ctx.currentTime + dur);
+    g.gain.setValueAtTime(0.12, this.ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+    o.connect(g); g.connect(this.ctx.destination);
+    o.start(); o.stop(this.ctx.currentTime + dur + 0.05);
+  }
+};
+
 // ============ 应用主类 ============
 
 const app = {
@@ -571,6 +627,7 @@ const app = {
 
   // ---- 初始化 ----
   init() {
+    document.addEventListener('click', () => SFX.init(), { once: true });
     this.loadData();
     this.renderHome();
     this.updateAllPoints();
@@ -698,6 +755,22 @@ const app = {
         }
       }
     }
+    if (!this.data.taskConfig) this.data.taskConfig = { overrides: {}, custom: [] };
+  },
+
+  // ---- 任务配置 ----
+  getActiveTasks() {
+    const cfg = this.data.taskConfig || {};
+    const overrides = cfg.overrides || {};
+    const custom = cfg.custom || [];
+    const builtIn = TASKS.filter(t => {
+      const o = overrides[t.id];
+      return !o || o.enabled !== false;
+    }).map(t => {
+      const o = overrides[t.id];
+      return o && o.points !== undefined ? { ...t, points: o.points } : t;
+    });
+    return [...builtIn, ...custom.filter(t => t.enabled !== false)];
   },
 
   // ---- 云同步 ----
@@ -857,7 +930,7 @@ const app = {
   renderTasks() {
     const today = new Date().toISOString().slice(0, 10);
     const todayDone = this.data.taskHistory.filter(t => t.date === today);
-    document.getElementById('task-list').innerHTML = TASKS.map(task => {
+    document.getElementById('task-list').innerHTML = this.getActiveTasks().map(task => {
       const isPenalty = task.points < 0;
       return `<div class="task-item ${isPenalty ? 'task-penalty' : ''}">
         <div class="task-icon">${task.icon}</div>
@@ -870,7 +943,7 @@ const app = {
       : todayDone.map(t => `<div class="today-item"><span class="check">&#10003;</span><span>${t.task}</span><span style="margin-left:auto;color:#B8860B">+${t.points}</span></div>`).join('');
   },
   completeTask(id, e) {
-    const task = TASKS.find(t => t.id === id);
+    const task = this.getActiveTasks().find(t => t.id === id);
     if (!task) return;
     if (task.points < 0) {
       // 扣分：不低于0
@@ -880,14 +953,120 @@ const app = {
       this.data.taskHistory.push({ task: task.name, points: actual, date: new Date().toISOString().slice(0, 10) });
       this.saveData(); this.updateAllPoints();
       this.animatePoints(actual, e.target.getBoundingClientRect().left, e.target.getBoundingClientRect().top, true);
-      this.renderTasks();
+      SFX.play('penalty'); this.renderTasks();
     } else {
       this.data.points += task.points;
       this.data.taskHistory.push({ task: task.name, points: task.points, date: new Date().toISOString().slice(0, 10) });
       this.saveData(); this.updateAllPoints();
       this.animatePoints(task.points, e.target.getBoundingClientRect().left, e.target.getBoundingClientRect().top);
-      this.celebrate(); this.renderTasks();
+      SFX.play('task'); this.celebrate(); this.renderTasks();
     }
+  },
+
+  // ---- 任务管理 ----
+  manageTasksPin() {
+    this.requirePin(() => this.showTaskManager());
+  },
+
+  showTaskManager() {
+    const cfg = this.data.taskConfig || { overrides: {}, custom: [] };
+    const overrides = cfg.overrides || {};
+    const custom = cfg.custom || [];
+    const emojis = ['💧','🎵','🎨','🏊','🧮','✏️','🍎','🚿','💊','🙏','🧹','🎯','🌳','📝','🎶','🤝','🧘','🍳','👟','🎮'];
+
+    let html = '<div class="task-mgr-section"><h4>内置任务</h4>';
+    html += TASKS.map(t => {
+      const o = overrides[t.id] || {};
+      const enabled = o.enabled !== false;
+      const pts = o.points !== undefined ? o.points : t.points;
+      return `<div class="task-mgr-row">
+        <span class="task-mgr-icon">${t.icon}</span>
+        <span class="task-mgr-name">${t.name}</span>
+        <input type="number" class="task-mgr-pts" value="${pts}" onchange="app.updateTaskPoints('${t.id}',this.value)">
+        <button class="task-mgr-toggle ${enabled ? 'on' : 'off'}" onclick="app.toggleTask('${t.id}')">${enabled ? '开' : '关'}</button>
+      </div>`;
+    }).join('');
+    html += '</div>';
+
+    if (custom.length > 0) {
+      html += '<div class="task-mgr-section"><h4>自定义任务</h4>';
+      html += custom.map(t => {
+        return `<div class="task-mgr-row">
+          <span class="task-mgr-icon">${t.icon}</span>
+          <span class="task-mgr-name">${t.name}</span>
+          <input type="number" class="task-mgr-pts" value="${t.points}" onchange="app.updateCustomTaskPoints('${t.id}',this.value)">
+          <button class="task-mgr-del" onclick="app.removeCustomTask('${t.id}')">✕</button>
+        </div>`;
+      }).join('');
+      html += '</div>';
+    }
+
+    html += '<div class="task-mgr-section"><h4>添加新任务</h4>';
+    html += `<div class="task-mgr-add">
+      <div class="task-mgr-emoji-pick" id="task-emoji-pick">
+        ${emojis.map(e => `<span class="emoji-opt" onclick="app.pickTaskEmoji('${e}')">${e}</span>`).join('')}
+      </div>
+      <div class="task-mgr-add-row">
+        <span class="task-mgr-icon" id="new-task-emoji">❓</span>
+        <input type="text" id="new-task-name" class="task-mgr-input" placeholder="任务名称" maxlength="10">
+        <input type="number" id="new-task-pts" class="task-mgr-pts" value="5" min="-20" max="50">
+        <button class="task-mgr-add-btn" onclick="app.addCustomTask()">+</button>
+      </div>
+    </div>`;
+
+    document.getElementById('task-mgr-content').innerHTML = html;
+    document.getElementById('task-mgr-modal').classList.add('show');
+  },
+
+  pickTaskEmoji(emoji) {
+    document.getElementById('new-task-emoji').textContent = emoji;
+  },
+
+  toggleTask(id) {
+    const cfg = this.data.taskConfig;
+    if (!cfg.overrides[id]) cfg.overrides[id] = {};
+    cfg.overrides[id].enabled = cfg.overrides[id].enabled === false ? true : false;
+    this.saveData();
+    this.showTaskManager();
+  },
+
+  updateTaskPoints(id, val) {
+    const pts = parseInt(val);
+    if (isNaN(pts)) return;
+    const cfg = this.data.taskConfig;
+    if (!cfg.overrides[id]) cfg.overrides[id] = {};
+    cfg.overrides[id].points = pts;
+    this.saveData();
+  },
+
+  updateCustomTaskPoints(id, val) {
+    const pts = parseInt(val);
+    if (isNaN(pts)) return;
+    const t = this.data.taskConfig.custom.find(c => c.id === id);
+    if (t) { t.points = pts; this.saveData(); }
+  },
+
+  addCustomTask() {
+    const name = document.getElementById('new-task-name').value.trim();
+    const icon = document.getElementById('new-task-emoji').textContent;
+    const pts = parseInt(document.getElementById('new-task-pts').value) || 5;
+    if (!name) { this.showToast('请输入任务名称'); return; }
+    if (icon === '❓') { this.showToast('请选择一个图标'); return; }
+    const id = 'custom_' + Date.now();
+    this.data.taskConfig.custom.push({ id, name, icon, points: pts });
+    this.saveData();
+    this.showTaskManager();
+  },
+
+  removeCustomTask(id) {
+    this.data.taskConfig.custom = this.data.taskConfig.custom.filter(t => t.id !== id);
+    this.saveData();
+    this.showTaskManager();
+  },
+
+  closeTaskManager() {
+    document.getElementById('task-mgr-modal').classList.remove('show');
+    this.renderTasks();
   },
 
   // ---- 小屋 ----
@@ -1090,7 +1269,7 @@ const app = {
       house.items.push(item.id);
     }
 
-    this.saveData(); this.updateAllPoints(); this.closeBuy(); this.celebrate(); this.renderShop();
+    this.saveData(); this.updateAllPoints(); this.closeBuy(); SFX.play('buy'); this.celebrate(); this.renderShop();
 
     // 如果购买的是有GIF的宠物，播放GIF动画
     if (cat === 'pet' && item.gif) {
@@ -1198,7 +1377,8 @@ const app = {
     this.saveData();
     this.updateAllPoints();
 
-    // 丰富的反馈动画
+    // 音效 + 丰富的反馈动画
+    SFX.play('feed');
     this.playNurtureAnim(action, petId);
   },
 
@@ -1496,6 +1676,7 @@ const app = {
     const mEl = document.getElementById('battle-monster');
     const hEl = document.getElementById('battle-hero');
     hEl.classList.add('hero-attack');
+    SFX.play(big ? 'bigAttack' : 'attack');
     if (cost > 0) this.animatePoints(-cost, window.innerWidth / 2, 60, true);
     setTimeout(() => {
       hEl.classList.remove('hero-attack');
@@ -1526,7 +1707,7 @@ const app = {
     const m = this.data.battle.currentMonster;
     this.data.battle.trophies.push({ id: m.id, name: m.name, icon: m.icon, defeatedDate: this.getToday() });
     this.data.battle.currentMonster = null;
-    this.saveData(); this.celebrate();
+    this.saveData(); SFX.play('victory'); this.celebrate();
     document.getElementById('victory-text').textContent = `你打败了 ${m.name}！战利品已加入小屋墙上！`;
     document.getElementById('victory-modal').classList.add('show');
   },
