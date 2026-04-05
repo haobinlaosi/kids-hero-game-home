@@ -653,6 +653,7 @@ const app = {
       document.addEventListener('WeixinJSBridgeReady', () => SFX.init(), { once: true });
     }
     this.loadData();
+    this._bootSync = (this.data && this.data._lastSync) || 0;
     this.renderHome();
     this.updateAllPoints();
     this._loadFromCloud();
@@ -823,13 +824,14 @@ const app = {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const cloud = await res.json();
       if (cloud && cloud._lastSync) {
-        const localTs = this.data._lastSync || 0;
-        if (cloud._lastSync > localTs) {
+        const bootTs = this._bootSync || 0;
+        if (cloud._lastSync > bootTs) {
           this.data = cloud;
           this._applyDataCompat();
           this.decayAllPetStats();
           if (!this.data.battle.currentMonster) this.spawnMonster();
           localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
+          this._bootSync = this.data._lastSync;
           this.renderHome();
           this.updateAllPoints();
         } else {
