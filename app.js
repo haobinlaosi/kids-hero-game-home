@@ -941,6 +941,12 @@ const app = {
 
   // ---- 云同步 ----
   async _syncToCloud() {
+    // 硬防线：空数据绝对不允许推送到云端（防止污染其他客户端）
+    if (this._isDataEmpty(this.data)) {
+      console.warn('[Sync] 本地数据为空，拒绝推送到云端');
+      this._updateSyncStatus('ok');
+      return;
+    }
     this._updateSyncStatus('syncing');
     try {
       const res = await fetch(SYNC_URL, {
