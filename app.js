@@ -652,8 +652,17 @@ const app = {
     } else {
       document.addEventListener('WeixinJSBridgeReady', () => SFX.init(), { once: true });
     }
+    // 关键：在 loadData() 之前从 localStorage 读取原始 _lastSync 快照
+    // 因为 loadData() 内部会调用 saveData() 把时间戳改成 now
+    let origLastSync = 0;
+    try {
+      const raw = localStorage.getItem('babyTaskGame_v3');
+      if (raw) origLastSync = (JSON.parse(raw)._lastSync) || 0;
+    } catch(e) {}
+    this._bootSync = origLastSync;
+    // 阻止 init 期间的云同步，防止把默认数据推到云端覆盖真实数据
+    this._cloudLoadPending = true;
     this.loadData();
-    this._bootSync = (this.data && this.data._lastSync) || 0;
     this.renderHome();
     this.updateAllPoints();
     this._loadFromCloud();
@@ -748,6 +757,8 @@ const app = {
   saveData() {
     this.data._lastSync = Date.now();
     localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
+    // init 期间阻止云同步（防止默认数据污染云端）
+    if (this._cloudLoadPending) return;
     clearTimeout(this._syncTimer);
     this._syncTimer = setTimeout(() => this._syncToCloud(), 2000);
   },
@@ -817,12 +828,15 @@ const app = {
 
   async _loadFromCloud() {
     this._updateSyncStatus('syncing');
+    let loadOk = false;
+    let cloudAdopted = false;
     try {
       const res = await fetch(SYNC_URL, {
         headers: { 'X-Auth-Token': SYNC_TOKEN },
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const cloud = await res.json();
+      loadOk = true;
       if (cloud && cloud._lastSync) {
         const bootTs = this._bootSync || 0;
         if (cloud._lastSync > bootTs) {
@@ -832,18 +846,22 @@ const app = {
           if (!this.data.battle.currentMonster) this.spawnMonster();
           localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
           this._bootSync = this.data._lastSync;
+          cloudAdopted = true;
           this.renderHome();
           this.updateAllPoints();
-        } else {
-          this._syncToCloud();
         }
-      } else if (this.data._lastSync) {
-        this._syncToCloud();
       }
       this._updateSyncStatus('ok');
     } catch (e) {
       console.warn('[Sync] 加载失败:', e);
       this._updateSyncStatus('error');
+    }
+    // 初始加载完成 — 解除云同步阻塞
+    this._cloudLoadPending = false;
+    // 只有本地确实有数据（_bootSync > 0 说明 localStorage 之前有内容）且没有采用云端数据时才推送
+    // 这避免了"首次安装 + 云端为空"的场景下把空默认数据污染到云端
+    if (loadOk && !cloudAdopted && this._bootSync > 0) {
+      this._syncToCloud();
     }
   },
 
