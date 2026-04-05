@@ -82,17 +82,27 @@ const SHOP_ITEMS = {
   pet: {
     label: '宠物', icon: '🐾', zone: 'pet',
     items: [
-      { id: 'p_dog', name: '小狗', icon: '🐕', price: 60, gif: 'gifs/dog.gif' },
-      { id: 'p_cat', name: '小猫', icon: '🐈', price: 60, gif: 'gifs/cat.gif' },
-      { id: 'p_rabbit', name: '兔子', icon: '🐰', price: 50, gif: 'gifs/rabbit.gif' },
-      { id: 'p_hamster', name: '仓鼠', icon: '🐹', price: 45, gif: 'gifs/hamster.gif' },
-      { id: 'p_bird', name: '小鸟', icon: '🐦', price: 50, gif: 'gifs/bird.gif' },
-      { id: 'p_fish', name: '金鱼', icon: '🐟', price: 40, gif: 'gifs/gold_fish.gif', aquatic: true },
-      { id: 'p_panda', name: '熊猫', icon: '🐼', price: 70, gif: 'gifs/panada.gif' },
-      { id: 'p_dragon', name: '小恐龙', icon: '🦖', price: 80, gif: 'gifs/Tyrannosaurus_rex.gif' },
-      { id: 'p_unicorn', name: '独角兽', icon: '🦄', price: 80, gif: 'gifs/unicorn.gif' },
-      { id: 'p_whale', name: '抹香鲸', icon: '🐋', price: 70, gif: 'gifs/whale.gif', aquatic: true },
-      { id: 'p_shark', name: '鲨鱼宝宝', icon: '🦈', price: 65, gif: 'gifs/shark.gif', aquatic: true }
+      { id: 'p_dog', name: '小狗', icon: '🐕', price: 60, gif: 'gifs/dog.gif', voice: 'dog' },
+      { id: 'p_cat', name: '小猫', icon: '🐈', price: 60, gif: 'gifs/cat.gif', voice: 'cat' },
+      { id: 'p_rabbit', name: '兔子', icon: '🐰', price: 50, gif: 'gifs/rabbit.gif', voice: 'rabbit' },
+      { id: 'p_hamster', name: '仓鼠', icon: '🐹', price: 45, gif: 'gifs/hamster.gif', voice: 'hamster' },
+      { id: 'p_bird', name: '小鸟', icon: '🐦', price: 50, gif: 'gifs/bird.gif', voice: 'bird' },
+      { id: 'p_fish', name: '金鱼', icon: '🐟', price: 40, gif: 'gifs/gold_fish.gif', aquatic: true, voice: 'fish' },
+      { id: 'p_panda', name: '熊猫', icon: '🐼', price: 70, gif: 'gifs/panada.gif', voice: 'panda' },
+      { id: 'p_dragon', name: '小恐龙', icon: '🦖', price: 80, gif: 'gifs/Tyrannosaurus_rex.gif', voice: 'dragon' },
+      { id: 'p_unicorn', name: '独角兽', icon: '🦄', price: 80, gif: 'gifs/unicorn.gif', voice: 'unicorn' },
+      { id: 'p_whale', name: '抹香鲸', icon: '🐋', price: 70, gif: 'gifs/whale.gif', aquatic: true, voice: 'whale' },
+      { id: 'p_shark', name: '鲨鱼宝宝', icon: '🦈', price: 65, gif: 'gifs/shark.gif', aquatic: true, voice: 'shark' }
+    ]
+  },
+  music: {
+    label: '音乐', icon: '🎵', zone: 'music',
+    items: [
+      { id: 'bgm_happy',     name: '欢乐曲', icon: '😄', price: 30, file: 'music/happy.mp3' },
+      { id: 'bgm_adventure', name: '冒险曲', icon: '⚔️', price: 40, file: 'music/adventure.mp3' },
+      { id: 'bgm_lullaby',   name: '摇篮曲', icon: '🌙', price: 30, file: 'music/lullaby.mp3' },
+      { id: 'bgm_hero',      name: '英雄曲', icon: '🦸', price: 50, file: 'music/hero.mp3' },
+      { id: 'bgm_magic',     name: '魔法曲', icon: '✨', price: 40, file: 'music/magic.mp3' }
     ]
   }
 };
@@ -106,6 +116,14 @@ const MONSTERS = [
   { id: 'm6', name: '巨石怪', icon: '🗿', maxHp: 10 },
   { id: 'm7', name: '毒蘑菇', icon: '🍄', maxHp: 10 },
   { id: 'm8', name: '幽灵怪', icon: '👻', maxHp: 10 }
+];
+
+const BOSSES = [
+  { id: 'b1', name: '炎魔王',     icon: '🔥👹', maxHp: 50, rewardPoints: 50 },
+  { id: 'b2', name: '冰封巨兽',   icon: '❄️🦖', maxHp: 50, rewardPoints: 50 },
+  { id: 'b3', name: '暗影恶龙',   icon: '🐲',   maxHp: 50, rewardPoints: 50 },
+  { id: 'b4', name: '雷霆魔神',   icon: '⚡👿', maxHp: 50, rewardPoints: 50 },
+  { id: 'b5', name: '终极大魔王', icon: '💀',   maxHp: 50, rewardPoints: 80 }
 ];
 
 // ============ 像素宠物 ============
@@ -591,6 +609,26 @@ const SFX = {
       case 'victory': this._beep(523,0.12,'sine'); this._beep(659,0.12,'sine',0.15); this._beep(784,0.12,'sine',0.3); this._beep(1047,0.25,'sine',0.45); break;
       case 'buy': this._beep(880,0.06,'sine'); this._beep(1100,0.1,'sine',0.08); break;
       case 'feed': this._beep(400,0.1,'triangle'); this._beep(500,0.1,'triangle',0.12); break;
+      case 'bossVictory':
+        // 扫频上行 + 多重和弦 + 尾音
+        this._sweep(200, 1200, 0.4);
+        this._beep(523, 0.2, 'sine', 0.3);
+        this._beep(659, 0.2, 'sine', 0.3);
+        this._beep(784, 0.3, 'sine', 0.3);
+        this._beep(1047, 0.4, 'sine', 0.6);
+        break;
+      // 宠物叫声
+      case 'pet_dog':     this._beep(180,0.12,'square'); this._beep(120,0.15,'square',0.13); break;
+      case 'pet_cat':     this._beep(700,0.08,'sine'); this._beep(900,0.15,'sine',0.09); break;
+      case 'pet_rabbit':  this._beep(1200,0.05,'sine'); this._beep(1400,0.05,'sine',0.07); this._beep(1200,0.05,'sine',0.14); break;
+      case 'pet_hamster': this._beep(1600,0.04,'sine'); this._beep(1800,0.04,'sine',0.05); this._beep(1600,0.04,'sine',0.1); break;
+      case 'pet_bird':    this._beep(1800,0.05,'triangle'); this._beep(2100,0.05,'triangle',0.06); this._beep(1900,0.05,'triangle',0.12); break;
+      case 'pet_fish':    this._noise(0.08); this._beep(300,0.06,'sine',0.1); break;
+      case 'pet_panda':   this._beep(120,0.18,'sine'); this._beep(100,0.2,'sine',0.18); break;
+      case 'pet_dragon':  this._sweep(400,100,0.35); this._noise(0.2); break;
+      case 'pet_unicorn': this._beep(800,0.08,'sine'); this._beep(1000,0.08,'sine',0.08); this._beep(1200,0.08,'sine',0.16); this._beep(1500,0.15,'sine',0.24); break;
+      case 'pet_whale':   this._beep(80,0.4,'sine'); this._beep(100,0.3,'sine',0.4); break;
+      case 'pet_shark':   this._beep(90,0.15,'sawtooth'); this._beep(70,0.2,'sawtooth',0.15); break;
     }
   },
   _beep(freq, dur, type, delay) {
@@ -630,6 +668,37 @@ const SFX = {
   }
 };
 
+// ============ 背景音乐引擎 ============
+const BGM = {
+  audio: null,
+  currentId: null,
+  init() {
+    if (this.audio) return;
+    this.audio = new Audio();
+    this.audio.loop = true;
+    this.audio.volume = 0.35;
+    this.audio.preload = 'auto';
+  },
+  play(trackId, file) {
+    this.init();
+    if (this.currentId === trackId && !this.audio.paused) return;
+    this.currentId = trackId;
+    this.audio.src = file;
+    const p = this.audio.play();
+    if (p && p.catch) p.catch(() => { /* 静默失败，等待下次用户交互 */ });
+  },
+  stop() {
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.currentTime = 0;
+    }
+    this.currentId = null;
+  },
+  isPlaying(trackId) {
+    return this.audio && !this.audio.paused && this.currentId === trackId;
+  }
+};
+
 // ============ 应用主类 ============
 
 const app = {
@@ -645,12 +714,39 @@ const app = {
 
   // ---- 初始化 ----
   init() {
-    document.addEventListener('touchstart', () => SFX.init(), { once: true });
-    document.addEventListener('click', () => SFX.init(), { once: true });
+    // 注册 Service Worker（网络优先策略，确保 PWA 及时更新）
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').then((reg) => {
+        // 检测到新版本时自动激活
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+              nw.postMessage('SKIP_WAITING');
+            }
+          });
+        });
+      }).catch((e) => console.warn('[SW] 注册失败:', e));
+      // 新 SW 接管后刷新页面一次，确保加载新资源
+      let refreshed = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshed) return;
+        refreshed = true;
+        window.location.reload();
+      });
+    }
+
+    const unlockAudio = () => {
+      SFX.init();
+      this.tryRestoreBGM();
+    };
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    document.addEventListener('click', unlockAudio, { once: true });
     if (typeof WeixinJSBridge !== 'undefined') {
-      WeixinJSBridge.invoke('getNetworkType', {}, () => SFX.init());
+      WeixinJSBridge.invoke('getNetworkType', {}, unlockAudio);
     } else {
-      document.addEventListener('WeixinJSBridgeReady', () => SFX.init(), { once: true });
+      document.addEventListener('WeixinJSBridgeReady', unlockAudio, { once: true });
     }
     // 关键：在 loadData() 之前从 localStorage 读取原始 _lastSync 快照
     // 因为 loadData() 内部会调用 saveData() 把时间戳改成 now
@@ -665,6 +761,7 @@ const app = {
     this.loadData();
     this.renderHome();
     this.updateAllPoints();
+    this.updateMuteButton();
     this._loadFromCloud();
   },
 
@@ -693,10 +790,14 @@ const app = {
         },
         battle: {
           currentMonster: null,
+          currentBoss: null,
+          killCount: 0,
           lastFreeAttackDate: null,
           lastPetAttackDates: {},
-          trophies: []
+          trophies: [],
+          bossTrophies: []
         },
+        music: { owned: [], current: null, enabled: true },
         taskHistory: [],
         parentPin: null
       };
@@ -713,7 +814,7 @@ const app = {
     this.data.petStatus[charId][petId] = {
       hunger: 80, clean: 80, happy: 80,
       lastUpdate: this.getToday(),
-      todayActions: { feed: 0, bath: 0, play: 0 },
+      todayActions: { feedMeat: 0, feedVeg: 0, feedRice: 0, bath: 0, play: 0 },
       lastActionDate: this.getToday()
     };
   },
@@ -726,7 +827,7 @@ const app = {
         const s = statuses[petId];
         // 重置每日免费次数
         if (s.lastActionDate !== today) {
-          s.todayActions = { feed: 0, bath: 0, play: 0 };
+          s.todayActions = { feedMeat: 0, feedVeg: 0, feedRice: 0, bath: 0, play: 0 };
           s.lastActionDate = today;
         }
         // 按天数衰减
@@ -768,6 +869,15 @@ const app = {
     if (!this.data.battle) this.data.battle = { currentMonster: null, lastFreeAttackDate: null, lastPetAttackDates: {}, trophies: [] };
     if (!this.data.battle.trophies) this.data.battle.trophies = [];
     if (!this.data.battle.lastPetAttackDates) this.data.battle.lastPetAttackDates = {};
+    // BOSS 系统字段兼容
+    if (this.data.battle.killCount === undefined) this.data.battle.killCount = 0;
+    if (!this.data.battle.bossTrophies) this.data.battle.bossTrophies = [];
+    if (this.data.battle.currentBoss === undefined) this.data.battle.currentBoss = null;
+    // 音乐系统字段兼容
+    if (!this.data.music) this.data.music = { owned: [], current: null, enabled: true };
+    if (!this.data.music.owned) this.data.music.owned = [];
+    if (this.data.music.current === undefined) this.data.music.current = null;
+    if (this.data.music.enabled === undefined) this.data.music.enabled = true;
     if (!this.data.houses) this.data.houses = { leidi: this.getDefaultHouse(), diga: this.getDefaultHouse() };
     for (const k of Object.keys(CHARACTERS)) {
       if (!this.data.houses[k]) this.data.houses[k] = this.getDefaultHouse();
@@ -788,6 +898,13 @@ const app = {
       for (const petId of pets) {
         if (!this.data.petStatus[charId][petId]) {
           this.initPetStatus(charId, petId);
+        }
+      }
+      // 宠物状态 todayActions 字段迁移：feed → feedMeat/feedVeg/feedRice
+      for (const petId of Object.keys(this.data.petStatus[charId])) {
+        const s = this.data.petStatus[charId][petId];
+        if (s.todayActions && s.todayActions.feedMeat === undefined) {
+          s.todayActions = { feedMeat: 0, feedVeg: 0, feedRice: 0, bath: s.todayActions.bath || 0, play: s.todayActions.play || 0 };
         }
       }
     }
@@ -849,6 +966,7 @@ const app = {
           cloudAdopted = true;
           this.renderHome();
           this.updateAllPoints();
+          this.updateMuteButton();
         }
       }
       this._updateSyncStatus('ok');
@@ -1127,6 +1245,7 @@ const app = {
     const char = CHARACTERS[charId];
     const house = this.data.houses[charId];
     const trophies = this.data.battle.trophies;
+    const bossTrophies = this.data.battle.bossTrophies || [];
 
     document.getElementById('house-title').textContent = char.name + '的小屋';
 
@@ -1147,12 +1266,22 @@ const app = {
     }).join('');
 
     // 战利品墙（右侧）- 按钮入口
-    document.getElementById('room-trophies').innerHTML = trophies.length === 0 ? '' :
-      `<button class="trophy-wall-btn" onclick="app.showTrophyWall()">
+    let trophyHtml = '';
+    if (trophies.length > 0) {
+      trophyHtml += `<button class="trophy-wall-btn" onclick="app.showTrophyWall()">
         <span class="trophy-wall-icon">🏆</span>
         <span class="trophy-wall-label">怪兽墙</span>
         <span class="trophy-wall-count">${trophies.length}</span>
       </button>`;
+    }
+    if (bossTrophies.length > 0) {
+      trophyHtml += `<button class="trophy-wall-btn boss-trophy-btn" onclick="app.showBossTrophyWall()">
+        <span class="trophy-wall-icon">👑</span>
+        <span class="trophy-wall-label">BOSS墙</span>
+        <span class="trophy-wall-count">${bossTrophies.length}</span>
+      </button>`;
+    }
+    document.getElementById('room-trophies').innerHTML = trophyHtml;
 
     // 角色（中间）
     document.getElementById('room-character').innerHTML =
@@ -1227,7 +1356,8 @@ const app = {
     const charId = this.data.currentCharacter;
     const house = this.data.houses[charId];
     const floorOwned = house.floor && house.floor.owned ? house.floor.owned : [];
-    const ownedIds = [...house.items, ...floorOwned, ...(house.pets || [])].filter(Boolean);
+    const musicOwned = (this.data.music && this.data.music.owned) || [];
+    const ownedIds = [...house.items, ...floorOwned, ...(house.pets || []), ...musicOwned].filter(Boolean);
     const char = CHARACTERS[charId];
 
     // 商店提示
@@ -1239,9 +1369,21 @@ const app = {
     if (this.shopCategory === 'floor') {
       notice = `<div class="shop-notice">购买后立即应用到${char.name}的小屋</div>`;
     }
+    if (this.shopCategory === 'music') {
+      notice = `<div class="shop-notice">购买后点击"播放"即可聆听 🎵</div>`;
+    }
 
     grid.innerHTML = notice + items.map(item => {
       const owned = ownedIds.includes(item.id);
+      if (this.shopCategory === 'music' && owned) {
+        // 已购买的音乐显示播放/停止按钮
+        const isPlaying = this.data.music.current === item.id && this.data.music.enabled;
+        return `<div class="shop-item owned music-item" onclick="app.toggleMusic('${item.id}')">
+          <div class="shop-item-icon">${item.icon}</div>
+          <div class="shop-item-name">${item.name}</div>
+          <div class="shop-item-price">${isPlaying ? '⏸ 停止' : '▶️ 播放'}</div>
+        </div>`;
+      }
       return `<div class="shop-item ${owned ? 'owned' : ''}" onclick="app.tryBuy('${item.id}')">
         <div class="shop-item-icon">${item.icon}</div>
         <div class="shop-item-name">${item.name}</div>
@@ -1271,7 +1413,8 @@ const app = {
     const charId = this.data.currentCharacter;
     const house = this.data.houses[charId];
     const floorOwned = house.floor && house.floor.owned ? house.floor.owned : [];
-    const allOwned = [...house.items, ...floorOwned, ...(house.pets || [])].filter(Boolean);
+    const musicOwned = (this.data.music && this.data.music.owned) || [];
+    const allOwned = [...house.items, ...floorOwned, ...(house.pets || []), ...musicOwned].filter(Boolean);
     if (allOwned.includes(itemId)) return;
 
     const item = this.findItem(itemId);
@@ -1287,6 +1430,55 @@ const app = {
   },
 
   closeBuy() { document.getElementById('buy-modal').classList.remove('show'); this.pendingBuyItem = null; },
+
+  // ---- 背景音乐控制 ----
+  toggleMusic(itemId) {
+    if (!this.data.music) this.data.music = { owned: [], current: null, enabled: true };
+    const item = this.findItem(itemId);
+    if (!item || !item.file) return;
+    // 如果当前这首正在播，则停止
+    if (this.data.music.current === itemId && this.data.music.enabled) {
+      BGM.stop();
+      this.data.music.current = null;
+    } else {
+      // 切换到新的曲目（即使静音状态，也更新选中项，但启用时才播放）
+      this.data.music.current = itemId;
+      this.data.music.enabled = true;
+      BGM.play(itemId, item.file);
+    }
+    this.saveData();
+    this.updateMuteButton();
+    if (this.currentPage === 'shop') this.renderShop();
+  },
+
+  toggleMute() {
+    if (!this.data.music) this.data.music = { owned: [], current: null, enabled: true };
+    this.data.music.enabled = !this.data.music.enabled;
+    if (!this.data.music.enabled) {
+      BGM.stop();
+    } else if (this.data.music.current) {
+      const item = this.findItem(this.data.music.current);
+      if (item && item.file) BGM.play(this.data.music.current, item.file);
+    }
+    this.saveData();
+    this.updateMuteButton();
+    if (this.currentPage === 'shop') this.renderShop();
+  },
+
+  updateMuteButton() {
+    const btn = document.getElementById('mute-btn');
+    if (!btn) return;
+    const enabled = this.data && this.data.music && this.data.music.enabled;
+    btn.textContent = enabled ? '🔊' : '🔇';
+  },
+
+  tryRestoreBGM() {
+    if (!this.data || !this.data.music) return;
+    if (!this.data.music.enabled) return;
+    if (!this.data.music.current) return;
+    const item = this.findItem(this.data.music.current);
+    if (item && item.file) BGM.play(this.data.music.current, item.file);
+  },
 
   confirmBuy() {
     const item = this.pendingBuyItem;
@@ -1309,6 +1501,9 @@ const app = {
     } else if (cat === 'pet') {
       house.pets.push(item.id);
       this.initPetStatus(charId, item.id);
+    } else if (cat === 'music') {
+      if (!this.data.music) this.data.music = { owned: [], current: null, enabled: true };
+      this.data.music.owned.push(item.id);
     } else {
       house.items.push(item.id);
     }
@@ -1332,8 +1527,18 @@ const app = {
   // ---- 宠物培养 ----
   openPetNurture(petId) {
     this.currentNurturePetId = petId;
+    // 进入宠物页时播放一声叫声
+    const pet = this.findItem(petId);
+    if (pet && pet.voice) SFX.play('pet_' + pet.voice);
     this.closePetList();
     this.goToPage('pet');
+  },
+
+  petEmojiClick(petId) {
+    const pet = this.findItem(petId);
+    if (!pet) return;
+    if (pet.voice) SFX.play('pet_' + pet.voice);
+    if (pet.gif) this.showGif(pet.gif, pet.name, 3000);
   },
 
   renderPetNurture(petId) {
@@ -1351,7 +1556,7 @@ const app = {
     const moodClass = { happy: 'mood-happy', normal: 'mood-normal', sad: 'mood-sad' };
     const moodEffects = { happy: '✨', normal: '', sad: '💧' };
     document.getElementById('pet-emoji-display').innerHTML =
-      `<span class="pet-big-emoji ${moodClass[mood]}" style="cursor:pointer" onclick="app.showGif('${pet.gif}','${pet.name}',3000)">${pet.icon}</span>` +
+      `<span class="pet-big-emoji ${moodClass[mood]}" style="cursor:pointer" onclick="app.petEmojiClick('${petId}')">${pet.icon}</span>` +
       (moodEffects[mood] ? `<span class="pet-mood-effect">${moodEffects[mood]}</span>` : '');
     document.getElementById('pet-anim-layer').innerHTML = '';
 
@@ -1377,17 +1582,19 @@ const app = {
     // 操作按钮
     const today = this.getToday();
     if (status.lastActionDate !== today) {
-      status.todayActions = { feed: 0, bath: 0, play: 0 };
+      status.todayActions = { feedMeat: 0, feedVeg: 0, feedRice: 0, bath: 0, play: 0 };
       status.lastActionDate = today;
       this.saveData();
     }
     const actions = [
-      { key: 'feed', icon: '🍖', label: '喂食', cls: 'pet-action-feed', stat: 'hunger' },
-      { key: 'bath', icon: '🛁', label: '洗澡', cls: 'pet-action-bath', stat: 'clean' },
-      { key: 'play', icon: '🎾', label: '玩耍', cls: 'pet-action-play', stat: 'happy' }
+      { key: 'feedMeat', icon: '🍖', label: '喂肉', cls: 'pet-action-feed-meat', stat: 'hunger' },
+      { key: 'feedVeg',  icon: '🥬', label: '喂菜', cls: 'pet-action-feed-veg',  stat: 'hunger' },
+      { key: 'feedRice', icon: '🍚', label: '喂饭', cls: 'pet-action-feed-rice', stat: 'hunger' },
+      { key: 'bath',     icon: '🛁', label: '洗澡', cls: 'pet-action-bath',      stat: 'clean' },
+      { key: 'play',     icon: '🎾', label: '玩耍', cls: 'pet-action-play',      stat: 'happy' }
     ];
     document.getElementById('pet-nurture-actions').innerHTML = actions.map(a => {
-      const isFree = status.todayActions[a.key] < 1;
+      const isFree = (status.todayActions[a.key] || 0) < 1;
       const costText = isFree ? '免费' : '⭐ 5';
       const isMax = status[a.stat] >= 100;
       return `<button class="pet-action-btn ${a.cls} ${isMax ? 'disabled' : ''}"
@@ -1405,18 +1612,22 @@ const app = {
     const status = this.data.petStatus[charId]?.[petId];
     if (!status) return;
 
-    const statMap = { feed: 'hunger', bath: 'clean', play: 'happy' };
+    const statMap = { feedMeat: 'hunger', feedVeg: 'hunger', feedRice: 'hunger', bath: 'clean', play: 'happy' };
     const stat = statMap[action];
+    if (!stat) return;
     if (status[stat] >= 100) { this.showToast('已经满了哦~'); return; }
 
-    const isFree = status.todayActions[action] < 1;
+    const isFree = (status.todayActions[action] || 0) < 1;
     if (!isFree && this.data.points < 5) { this.showToast('积分不够哦~'); return; }
 
     if (!isFree) {
       this.data.points -= 5;
     }
-    status.todayActions[action]++;
-    status[stat] = Math.min(100, status[stat] + 30);
+    status.todayActions[action] = (status.todayActions[action] || 0) + 1;
+    // 三种喂食各 +20（三样能加 60），洗澡/玩耍仍 +30
+    const isFeed = action === 'feedMeat' || action === 'feedVeg' || action === 'feedRice';
+    const delta = isFeed ? 20 : 30;
+    status[stat] = Math.min(100, status[stat] + delta);
 
     this.saveData();
     this.updateAllPoints();
@@ -1431,9 +1642,14 @@ const app = {
     const petEl = document.getElementById('pet-emoji-display');
     layer.innerHTML = '';
 
-    if (action === 'feed') {
+    const foodMap = {
+      feedMeat: ['🍖','🍗','🥩','🍖','🍗'],
+      feedVeg:  ['🥬','🥕','🥦','🌽','🥬'],
+      feedRice: ['🍚','🍙','🍱','🍚','🍙']
+    };
+    if (foodMap[action]) {
       // 食物从上方掉落，宠物吃东西弹跳
-      const foods = ['🍖','🍗','🥩','🍕','🍔'];
+      const foods = foodMap[action];
       for (let i = 0; i < 5; i++) {
         const f = document.createElement('span');
         f.className = 'anim-food-drop';
@@ -1550,6 +1766,9 @@ const app = {
 
   showTrophyWall() {
     const trophies = this.data.battle.trophies;
+    const modal = document.getElementById('trophy-wall-modal');
+    const titleEl = modal.querySelector('h3');
+    if (titleEl) titleEl.textContent = '🏆 怪兽墙';
     document.getElementById('trophy-wall-subtitle').textContent =
       `已打败 ${trophies.length} 只怪兽！`;
     const grouped = {};
@@ -1567,11 +1786,37 @@ const app = {
           <div class="trophy-card-date">${t.dates[t.dates.length - 1]}</div>
         </div>
       `).join('');
-    document.getElementById('trophy-wall-modal').classList.add('show');
+    modal.classList.add('show');
   },
 
   closeTrophyWall() {
     document.getElementById('trophy-wall-modal').classList.remove('show');
+  },
+
+  showBossTrophyWall() {
+    const trophies = this.data.battle.bossTrophies || [];
+    document.getElementById('trophy-wall-subtitle').textContent =
+      `已击败 ${trophies.length} 只 BOSS！`;
+    // 标题改为 BOSS 墙
+    const modal = document.getElementById('trophy-wall-modal');
+    const titleEl = modal.querySelector('h3');
+    if (titleEl) titleEl.textContent = '👑 BOSS 战利品墙';
+    const grouped = {};
+    trophies.forEach(t => {
+      if (!grouped[t.id]) grouped[t.id] = { ...t, count: 0, dates: [] };
+      grouped[t.id].count++;
+      grouped[t.id].dates.push(t.defeatedDate);
+    });
+    document.getElementById('trophy-wall-grid').innerHTML =
+      Object.values(grouped).map(t => `
+        <div class="trophy-wall-card boss-trophy-card">
+          <div class="trophy-card-icon" style="font-size:48px">${t.icon}</div>
+          <div class="trophy-card-name">${t.name}</div>
+          <div class="trophy-card-count">x${t.count}</div>
+          <div class="trophy-card-date">${t.dates[t.dates.length - 1]}</div>
+        </div>
+      `).join('');
+    modal.classList.add('show');
   },
 
   // ---- 换装系统 ----
@@ -1619,7 +1864,26 @@ const app = {
     if (avail.length === 0) avail = [...MONSTERS];
     const m = avail[Math.floor(Math.random() * avail.length)];
     this.data.battle.currentMonster = { ...m, hp: m.maxHp };
+    this.data.battle.currentBoss = null;
     this.saveData();
+  },
+
+  spawnBoss() {
+    const defeated = (this.data.battle.bossTrophies || []).map(t => t.id);
+    let avail = BOSSES.filter(b => !defeated.includes(b.id));
+    if (avail.length === 0) avail = [...BOSSES];
+    const b = avail[Math.floor(Math.random() * avail.length)];
+    this.data.battle.currentBoss = { ...b, hp: b.maxHp };
+    this.data.battle.currentMonster = null;
+    this.saveData();
+  },
+
+  getBattleTarget() {
+    return this.data.battle.currentBoss || this.data.battle.currentMonster;
+  },
+
+  isBossBattle() {
+    return !!this.data.battle.currentBoss;
   },
 
   canFreeAttack() { return this.data.battle.lastFreeAttackDate !== this.getToday(); },
@@ -1635,14 +1899,23 @@ const app = {
   },
 
   renderBattle() {
-    const monster = this.data.battle.currentMonster;
-    if (!monster) { this.spawnMonster(); return this.renderBattle(); }
+    const target = this.getBattleTarget();
+    if (!target) { this.spawnMonster(); return this.renderBattle(); }
+    const isBoss = this.isBossBattle();
 
-    document.getElementById('monster-name').textContent = monster.name;
-    document.getElementById('monster-icon').textContent = monster.icon;
-    const pct = Math.max(0, (monster.hp / monster.maxHp) * 100);
+    // BOSS 模式切换容器 class
+    const monsterEl = document.getElementById('battle-monster');
+    if (isBoss) monsterEl.classList.add('boss-mode');
+    else monsterEl.classList.remove('boss-mode');
+
+    // BOSS 来袭标签
+    let nameHtml = target.name;
+    if (isBoss) nameHtml = '👑 BOSS 来袭！ ' + target.name;
+    document.getElementById('monster-name').innerHTML = nameHtml;
+    document.getElementById('monster-icon').textContent = target.icon;
+    const pct = Math.max(0, (target.hp / target.maxHp) * 100);
     document.getElementById('monster-hp-bar').style.width = pct + '%';
-    document.getElementById('monster-hp-text').textContent = `HP: ${monster.hp} / ${monster.maxHp}`;
+    document.getElementById('monster-hp-text').textContent = `HP: ${target.hp} / ${target.maxHp}`;
 
     const char = CHARACTERS[this.data.currentCharacter];
     document.getElementById('battle-hero').innerHTML =
@@ -1683,8 +1956,8 @@ const app = {
 
   attack(type) {
     if (this.battleAnimating) return;
-    const monster = this.data.battle.currentMonster;
-    if (!monster || monster.hp <= 0) return;
+    const target = this.getBattleTarget();
+    if (!target || target.hp <= 0) return;
     let damage = 0, cost = 0;
     if (type === 'normal') { if (!this.canFreeAttack()) return; damage = 1; this.data.battle.lastFreeAttackDate = this.getToday(); }
     else if (type === 'strong') { cost = 10; damage = 3; }
@@ -1699,8 +1972,8 @@ const app = {
   petAttack(petId) {
     if (this.battleAnimating) return;
     if (!this.canPetAttack(petId)) return;
-    const monster = this.data.battle.currentMonster;
-    if (!monster || monster.hp <= 0) return;
+    const target = this.getBattleTarget();
+    if (!target || target.hp <= 0) return;
     const pet = this.findItem(petId);
     if (!pet) return;
     this.data.battle.lastPetAttackDates[petId] = this.getToday();
@@ -1713,8 +1986,9 @@ const app = {
   },
 
   doAttackAnim(damage, big, cost) {
-    const monster = this.data.battle.currentMonster;
-    monster.hp = Math.max(0, monster.hp - damage);
+    const target = this.getBattleTarget();
+    if (!target) return;
+    target.hp = Math.max(0, target.hp - damage);
     this.saveData(); this.updateAllPoints();
     this.battleAnimating = true;
     const mEl = document.getElementById('battle-monster');
@@ -1730,7 +2004,7 @@ const app = {
         mEl.classList.remove('monster-hit', 'monster-hit-big');
         this.battleAnimating = false;
         this.renderBattle();
-        if (monster.hp <= 0) this.monsterDefeated();
+        if (target.hp <= 0) this.monsterDefeated();
       }, 400);
     }, 300);
   },
@@ -1748,17 +2022,65 @@ const app = {
   },
 
   monsterDefeated() {
-    const m = this.data.battle.currentMonster;
-    this.data.battle.trophies.push({ id: m.id, name: m.name, icon: m.icon, defeatedDate: this.getToday() });
-    this.data.battle.currentMonster = null;
-    this.saveData(); SFX.play('victory'); this.celebrate();
-    document.getElementById('victory-text').textContent = `你打败了 ${m.name}！战利品已加入小屋墙上！`;
-    document.getElementById('victory-modal').classList.add('show');
+    const modal = document.getElementById('victory-modal');
+    const titleEl = modal.querySelector('h3');
+    const textEl = document.getElementById('victory-text');
+    const iconEl = modal.querySelector('.victory-icon') || modal.querySelector('div[style*="font-size:60px"]');
+
+    if (this.isBossBattle()) {
+      const b = this.data.battle.currentBoss;
+      // 加入 BOSS 战利品墙
+      this.data.battle.bossTrophies.push({ id: b.id, name: b.name, icon: b.icon, defeatedDate: this.getToday() });
+      this.data.battle.currentBoss = null;
+      this._justDefeatedBoss = true;
+      // 发奖励
+      const reward = b.rewardPoints || 50;
+      this.data.points += reward;
+      this.saveData();
+      this.updateAllPoints();
+      SFX.play('bossVictory');
+      this.celebrate();
+      // 再撒一轮彩带，加强效果
+      setTimeout(() => this.celebrate(), 300);
+      if (iconEl) iconEl.textContent = '👑';
+      if (titleEl) { titleEl.textContent = 'BOSS 被击败啦！'; titleEl.style.color = '#FFB300'; }
+      textEl.innerHTML = `你打败了 <b>${b.name}</b>！<br><span style="color:#FFB300;font-size:20px;font-weight:800">+${reward} 积分</span>`;
+      modal.classList.add('boss-victory');
+    } else {
+      const m = this.data.battle.currentMonster;
+      this.data.battle.trophies.push({ id: m.id, name: m.name, icon: m.icon, defeatedDate: this.getToday() });
+      this.data.battle.currentMonster = null;
+      this.data.battle.killCount = (this.data.battle.killCount || 0) + 1;
+      this.saveData();
+      SFX.play('victory');
+      this.celebrate();
+      if (iconEl) iconEl.textContent = '🎉';
+      if (titleEl) { titleEl.textContent = '怪兽被打败啦！'; titleEl.style.color = '#FF6B6B'; }
+      textEl.textContent = `你打败了 ${m.name}！战利品已加入小屋墙上！`;
+      modal.classList.remove('boss-victory');
+    }
+    modal.classList.add('show');
   },
 
   closeVictory() {
-    document.getElementById('victory-modal').classList.remove('show');
-    this.spawnMonster(); this.renderBattle();
+    const modal = document.getElementById('victory-modal');
+    modal.classList.remove('show');
+    modal.classList.remove('boss-victory');
+    // 判断下一个对手
+    if (!this.data.battle.currentBoss && !this.data.battle.currentMonster) {
+      const kc = this.data.battle.killCount || 0;
+      // 刚击败 BOSS 的话直接回到小怪
+      if (this._justDefeatedBoss) {
+        this._justDefeatedBoss = false;
+        this.spawnMonster();
+      } else if (kc > 0 && kc % 5 === 0) {
+        // 累计击杀每 5 只触发 BOSS
+        this.spawnBoss();
+      } else {
+        this.spawnMonster();
+      }
+    }
+    this.renderBattle();
   },
 
   // ---- GIF动画 ----
