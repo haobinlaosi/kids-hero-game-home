@@ -956,6 +956,26 @@ const app = {
     }
   },
 
+  // 判断一份数据是否明显是空的默认状态（没有任何有效进度）
+  _isDataEmpty(d) {
+    if (!d || !d.houses) return true;
+    if ((d.points || 0) > 0) return false;
+    for (const k of Object.keys(d.houses || {})) {
+      const h = d.houses[k] || {};
+      if ((h.items || []).length > 0) return false;
+      if ((h.pets || []).length > 0) return false;
+      if (h.floor && (h.floor.owned || []).length > 0) return false;
+    }
+    if (d.battle) {
+      if ((d.battle.trophies || []).length > 0) return false;
+      if ((d.battle.bossTrophies || []).length > 0) return false;
+      if ((d.battle.killCount || 0) > 0) return false;
+    }
+    if (d.music && (d.music.owned || []).length > 0) return false;
+    if ((d.taskHistory || []).length > 0) return false;
+    return true;
+  },
+
   async _loadFromCloud() {
     this._updateSyncStatus('syncing');
     let loadOk = false;
@@ -969,7 +989,14 @@ const app = {
       loadOk = true;
       if (cloud && cloud._lastSync) {
         const bootTs = this._bootSync || 0;
-        if (cloud._lastSync > bootTs) {
+        // 完整性守卫：如果云端是空的默认状态但本地有真实数据，不要盲目采用云端
+        // 这样可以从"云端被意外清空"的事故中恢复 — 本地数据会被推回云端
+        const cloudEmpty = this._isDataEmpty(cloud);
+        const localHasData = !this._isDataEmpty(this.data);
+        if (cloudEmpty && localHasData) {
+          console.warn('[Sync] 云端为空但本地有数据，保留本地并推送（恢复云端）');
+          // 不采用云端，走到下面的推送分支
+        } else if (cloud._lastSync > bootTs) {
           this.data = cloud;
           this._applyDataCompat();
           this.decayAllPetStats();
