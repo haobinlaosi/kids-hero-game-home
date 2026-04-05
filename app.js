@@ -941,10 +941,19 @@ const app = {
 
   // ---- 云同步 ----
   async _syncToCloud() {
-    // 硬防线：空数据绝对不允许推送到云端（防止污染其他客户端）
+    // 硬防线 1：空数据绝对不允许推送到云端（防止污染其他客户端）
     if (this._isDataEmpty(this.data)) {
       console.warn('[Sync] 本地数据为空，拒绝推送到云端');
       this._updateSyncStatus('ok');
+      return;
+    }
+    // 硬防线 2：会话级兜底——如果本次会话从未成功从云端拉到过真实数据，
+    // 且本地启动时 localStorage 也是空的，则禁用所有云推送
+    // 这防止：新设备/新 PWA 第一次打开时，因为 fetch 慢或失败，用户误操作后
+    // 把 "初始空数据 + 几分新数据" 推上去覆盖云端的真实进度
+    if (!this._cloudEverLoaded && (this._bootSync || 0) === 0) {
+      console.warn('[Sync] 会话未成功加载过云端 + 本地启动为空，禁用推送（保护云端）');
+      this._updateSyncStatus('error');
       return;
     }
     this._updateSyncStatus('syncing');
@@ -1013,6 +1022,11 @@ const app = {
           this.renderHome();
           this.updateAllPoints();
           this.updateMuteButton();
+        }
+        // 无论是否采用云端，只要成功拉到了非空云端数据，本会话就标记为"已知道云端有数据"
+        // 这样后续的 _syncToCloud 才能放行
+        if (!this._isDataEmpty(cloud)) {
+          this._cloudEverLoaded = true;
         }
       }
       this._updateSyncStatus('ok');
