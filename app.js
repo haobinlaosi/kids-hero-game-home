@@ -812,7 +812,7 @@ const app = {
   initPetStatus(charId, petId) {
     if (!this.data.petStatus[charId]) this.data.petStatus[charId] = {};
     this.data.petStatus[charId][petId] = {
-      hunger: 80, clean: 80, happy: 80,
+      meat: 80, veg: 80, rice: 80, clean: 80, happy: 80,
       lastUpdate: this.getToday(),
       todayActions: { feedMeat: 0, feedVeg: 0, feedRice: 0, bath: 0, play: 0 },
       lastActionDate: this.getToday()
@@ -835,7 +835,9 @@ const app = {
           const diff = Math.floor((new Date(today) - new Date(s.lastUpdate)) / 86400000);
           if (diff > 0) {
             const decay = diff * 20;
-            s.hunger = Math.max(0, s.hunger - decay);
+            s.meat = Math.max(0, (s.meat || 0) - decay);
+            s.veg  = Math.max(0, (s.veg  || 0) - decay);
+            s.rice = Math.max(0, (s.rice || 0) - decay);
             s.clean = Math.max(0, s.clean - decay);
             s.happy = Math.max(0, s.happy - decay);
             s.lastUpdate = today;
@@ -849,7 +851,10 @@ const app = {
   getPetMood(charId, petId) {
     const s = this.data.petStatus[charId]?.[petId];
     if (!s) return 'normal';
-    const min = Math.min(s.hunger, s.clean, s.happy);
+    const meat = s.meat ?? s.hunger ?? 0;
+    const veg  = s.veg  ?? s.hunger ?? 0;
+    const rice = s.rice ?? s.hunger ?? 0;
+    const min = Math.min(meat, veg, rice, s.clean, s.happy);
     if (min >= 70) return 'happy';
     if (min < 30) return 'sad';
     return 'normal';
@@ -905,6 +910,14 @@ const app = {
         const s = this.data.petStatus[charId][petId];
         if (s.todayActions && s.todayActions.feedMeat === undefined) {
           s.todayActions = { feedMeat: 0, feedVeg: 0, feedRice: 0, bath: s.todayActions.bath || 0, play: s.todayActions.play || 0 };
+        }
+        // 单一 hunger → meat/veg/rice 拆分
+        if (s.meat === undefined) {
+          const h = s.hunger !== undefined ? s.hunger : 80;
+          s.meat = h;
+          s.veg = h;
+          s.rice = h;
+          delete s.hunger;
         }
       }
     }
@@ -1566,16 +1579,18 @@ const app = {
 
     // 状态条
     document.getElementById('pet-stats').innerHTML = [
-      { icon: '🍖', key: 'hunger', label: '饱食', cls: 'hunger' },
+      { icon: '🍖', key: 'meat',  label: '肉',   cls: 'meat' },
+      { icon: '🥬', key: 'veg',   label: '菜',   cls: 'veg' },
+      { icon: '🍚', key: 'rice',  label: '饭',   cls: 'rice' },
       { icon: '🛁', key: 'clean', label: '清洁', cls: 'clean' },
       { icon: '🎾', key: 'happy', label: '快乐', cls: 'happy' }
     ].map(s => `
       <div class="pet-stat-row">
         <span class="pet-stat-icon">${s.icon}</span>
         <div class="pet-stat-bar-wrap">
-          <div class="pet-stat-bar ${s.cls}" style="width:${status[s.key]}%"></div>
+          <div class="pet-stat-bar ${s.cls}" style="width:${status[s.key] || 0}%"></div>
         </div>
-        <span class="pet-stat-val">${status[s.key]}</span>
+        <span class="pet-stat-val">${status[s.key] || 0}</span>
       </div>
     `).join('');
 
@@ -1587,16 +1602,16 @@ const app = {
       this.saveData();
     }
     const actions = [
-      { key: 'feedMeat', icon: '🍖', label: '喂肉', cls: 'pet-action-feed-meat', stat: 'hunger' },
-      { key: 'feedVeg',  icon: '🥬', label: '喂菜', cls: 'pet-action-feed-veg',  stat: 'hunger' },
-      { key: 'feedRice', icon: '🍚', label: '喂饭', cls: 'pet-action-feed-rice', stat: 'hunger' },
+      { key: 'feedMeat', icon: '🍖', label: '喂肉', cls: 'pet-action-feed-meat', stat: 'meat' },
+      { key: 'feedVeg',  icon: '🥬', label: '喂菜', cls: 'pet-action-feed-veg',  stat: 'veg' },
+      { key: 'feedRice', icon: '🍚', label: '喂饭', cls: 'pet-action-feed-rice', stat: 'rice' },
       { key: 'bath',     icon: '🛁', label: '洗澡', cls: 'pet-action-bath',      stat: 'clean' },
       { key: 'play',     icon: '🎾', label: '玩耍', cls: 'pet-action-play',      stat: 'happy' }
     ];
     document.getElementById('pet-nurture-actions').innerHTML = actions.map(a => {
       const isFree = (status.todayActions[a.key] || 0) < 1;
       const costText = isFree ? '免费' : '⭐ 5';
-      const isMax = status[a.stat] >= 100;
+      const isMax = (status[a.stat] || 0) >= 100;
       return `<button class="pet-action-btn ${a.cls} ${isMax ? 'disabled' : ''}"
         onclick="app.doPetAction('${petId}', '${a.key}')"
         ${isMax ? 'disabled' : ''}>
@@ -1612,10 +1627,11 @@ const app = {
     const status = this.data.petStatus[charId]?.[petId];
     if (!status) return;
 
-    const statMap = { feedMeat: 'hunger', feedVeg: 'hunger', feedRice: 'hunger', bath: 'clean', play: 'happy' };
+    // 每种动作对应独立的属性条
+    const statMap = { feedMeat: 'meat', feedVeg: 'veg', feedRice: 'rice', bath: 'clean', play: 'happy' };
     const stat = statMap[action];
     if (!stat) return;
-    if (status[stat] >= 100) { this.showToast('已经满了哦~'); return; }
+    if ((status[stat] || 0) >= 100) { this.showToast('已经满了哦~'); return; }
 
     const isFree = (status.todayActions[action] || 0) < 1;
     if (!isFree && this.data.points < 5) { this.showToast('积分不够哦~'); return; }
@@ -1624,10 +1640,8 @@ const app = {
       this.data.points -= 5;
     }
     status.todayActions[action] = (status.todayActions[action] || 0) + 1;
-    // 三种喂食各 +20（三样能加 60），洗澡/玩耍仍 +30
-    const isFeed = action === 'feedMeat' || action === 'feedVeg' || action === 'feedRice';
-    const delta = isFeed ? 20 : 30;
-    status[stat] = Math.min(100, status[stat] + delta);
+    // 每次操作 +30
+    status[stat] = Math.min(100, (status[stat] || 0) + 30);
 
     this.saveData();
     this.updateAllPoints();
@@ -1740,7 +1754,9 @@ const app = {
       grid.innerHTML = pets.map(pet => {
         const status = this.data.petStatus[charId]?.[pet.id];
         const mood = this.getPetMood(charId, pet.id);
-        const h = status?.hunger || 0;
+        const m = status?.meat || 0;
+        const v = status?.veg || 0;
+        const r = status?.rice || 0;
         const c = status?.clean || 0;
         const hp = status?.happy || 0;
         return `<div class="pet-list-card" onclick="app.openPetNurture('${pet.id}')">
@@ -1748,7 +1764,9 @@ const app = {
           <div class="pet-list-info">
             <div class="pet-list-name">${pet.name}</div>
             <div class="pet-list-bars">
-              <div class="pet-mini-bar"><div class="pet-mini-bar-fill hunger" style="width:${h}%"></div></div>
+              <div class="pet-mini-bar"><div class="pet-mini-bar-fill meat" style="width:${m}%"></div></div>
+              <div class="pet-mini-bar"><div class="pet-mini-bar-fill veg" style="width:${v}%"></div></div>
+              <div class="pet-mini-bar"><div class="pet-mini-bar-fill rice" style="width:${r}%"></div></div>
               <div class="pet-mini-bar"><div class="pet-mini-bar-fill clean" style="width:${c}%"></div></div>
               <div class="pet-mini-bar"><div class="pet-mini-bar-fill happy" style="width:${hp}%"></div></div>
             </div>
