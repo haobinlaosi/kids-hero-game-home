@@ -12,15 +12,32 @@
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <link rel="manifest" href="manifest.json">
   <title>宝贝任务乐园</title>
-  <link rel="stylesheet" href="style.css?v=24">
+  <link rel="stylesheet" href="style.css?v=25">
 </head>
 <body>
+
+  <!-- ========== 认证页（登录/注册/重置）========== -->
+  <div id="page-auth" class="page">
+    <div class="auth-container">
+      <div class="auth-header">
+        <h1>&#127873; 宝贝任务乐园</h1>
+        <p class="auth-subtitle">请先登录或注册</p>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login" onclick="app.switchAuthTab('login')">登录</button>
+        <button class="auth-tab" data-tab="register" onclick="app.switchAuthTab('register')">注册</button>
+        <button class="auth-tab" data-tab="reset" onclick="app.switchAuthTab('reset')">忘记密码</button>
+      </div>
+      <div class="auth-form" id="auth-form"></div>
+    </div>
+  </div>
 
   <!-- ========== 首页 ========== -->
   <div id="page-home" class="page active">
     <div class="home-header">
       <span id="sync-indicator" class="sync-indicator"></span>
       <div class="points-display"><span class="star-icon">&#9733;</span> <span class="pts-val">0</span> 积分</div>
+      <button id="logout-btn" class="logout-btn" onclick="app.logout()" title="退出登录">&#9211;</button>
     </div>
     <div class="character-stage" id="home-character-stage"></div>
     <div class="character-name" id="home-character-name"></div>
@@ -226,6 +243,6 @@
 
   <div id="celebration" class="celebration"></div>
   <button id="mute-btn" class="mute-btn" onclick="app.toggleMute()" title="背景音乐开关">🔊</button>
-  <script src="app.js?v=24"></script>
+  <script src="app.js?v=25"></script>
 </body>
 </html>

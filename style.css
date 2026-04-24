@@ -1039,3 +1039,148 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
   color: #0984e3;
   font-weight: 800;
 }
+
+/* ============ 登出按钮 ============ */
+.logout-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.9);
+  color: #FF6B6B;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+.logout-btn:hover { background: #FFEBEB; }
+.logout-btn:active { transform: translateY(-50%) scale(0.9); }
+
+/* ============ 认证页 ============ */
+#page-auth {
+  background: linear-gradient(160deg, #FFE9F3 0%, #E5F3FF 100%);
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+.auth-container {
+  max-width: 420px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px 22px 24px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+.auth-header { text-align: center; margin-bottom: 20px; }
+.auth-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #FF6B6B, #FFD93D);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.auth-subtitle {
+  margin: 6px 0 0;
+  color: #888;
+  font-size: 14px;
+}
+.auth-tabs {
+  display: flex;
+  gap: 6px;
+  background: #F5F5F5;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 18px;
+}
+.auth-tab {
+  flex: 1;
+  padding: 10px 6px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.auth-tab.active {
+  background: #fff;
+  color: #FF6B6B;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.auth-form { display: flex; flex-direction: column; gap: 12px; }
+.auth-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  font-size: 16px;
+  border: 2px solid #EEE;
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+  background: #FAFAFA;
+}
+.auth-input:focus {
+  border-color: #FFD93D;
+  background: #fff;
+}
+.auth-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+  padding: 4px 2px;
+}
+.auth-checkbox input[type=checkbox] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: #FF6B6B;
+}
+.auth-error {
+  min-height: 18px;
+  color: #E74C3C;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+.auth-hint {
+  color: #2980B9;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 12px;
+  background: #E8F4FD;
+  border-radius: 8px;
+  text-align: center;
+  min-height: 18px;
+}
+.auth-hint:empty { display: none; }
+.auth-btn {
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.2s;
+}
+.auth-btn:active { transform: scale(0.98); }
+.auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.auth-btn-primary {
+  background: linear-gradient(135deg, #FF6B6B, #FFB86B);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(255,107,107,0.3);
+}
+.auth-btn-secondary {
+  background: #F0F0F0;
+  color: #555;
+}

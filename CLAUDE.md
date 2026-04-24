@@ -10,7 +10,8 @@
 
 - 纯静态 HTML + CSS + JavaScript（无框架、无构建步骤）
 - 通过 GitHub Pages 部署：https://haobinlaosi.github.io/kids-hero-game-home/
-- 数据存储在 `localStorage`，key 为 `babyTaskGame_v3`
+- 数据存储在 `localStorage`：游戏数据 `babyTaskGame_v3`、登录态 `kids_hero_auth_v1`
+- 云同步通过 Cloudflare Worker + KV（按用户名分 key，详见"用户注册登录"章节）
 - 支持 PWA（manifest.json + Service Worker 网络优先缓存）
 
 ## 部署方式
@@ -40,15 +41,17 @@ node bump-version.js 25       # 设为指定版本
 
 ## 架构设计
 
-单页应用，包含 6 个页面（`page-home`、`page-task`、`page-house`、`page-shop`、`page-battle`、`page-pet`），通过 CSS 类名切换显示。所有逻辑集中在 `app.js` 的全局 `app` 对象中。
+单页应用，包含 7 个页面（`page-auth`、`page-home`、`page-task`、`page-house`、`page-shop`、`page-battle`、`page-pet`），通过 CSS 类名切换显示。所有逻辑集中在 `app.js` 的全局 `app` 对象中。
 
 ### app.js 结构（从上到下）
 1. **数据常量** — `CHARACTERS`、`TASKS`、`SHOP_ITEMS`（6 个分类：家具/墙饰/地板/特殊/宠物/音乐）、`MONSTERS`、`BOSSES`、`PIXEL_PETS`
 2. **`renderPixelPet()`** — 根据像素网格定义生成 SVG
 3. **`SFX` 音效引擎** — Web Audio 合成，含 7 种基础音效 + 11 种宠物叫声 + `bossVictory`
 4. **`BGM` 背景音乐引擎** — HTML `<audio>` 单例，循环播放 MP3
-5. **`app` 对象** — 所有游戏逻辑，按功能模块组织：
-   - 初始化 / Service Worker 注册 / 数据迁移（支持 v1→v2→v3 + 多轮字段兼容）
+5. **`Auth` 用户认证模块** — SHA-256 客户端哈希 + Worker `/auth/*` 端点调用
+6. **`app` 对象** — 所有游戏逻辑，按功能模块组织：
+   - 初始化（Service Worker 注册、检查登录态、自动跳转 auth/home）
+   - 用户认证（登录/注册/忘记密码/登出/数据迁移）
    - 页面导航（SPA 淡入淡出切换）
    - 积分显示与动画
    - 家长 PIN 系统（4 位密码用于记录任务）
@@ -65,7 +68,7 @@ node bump-version.js 25       # 设为指定版本
 - 两个角色共享积分，但各自拥有独立的小屋、宠物和宠物状态
 - 音乐购买状态是**全局**的（不分角色），存在 `this.data.music = { owned, current, enabled }`
 - 宠物属性在应用加载时根据距上次更新的天数进行衰减
-- 云同步（`_syncToCloud`/`_loadFromCloud`）通过 Cloudflare Worker + KV 存储
+- 云同步（`_syncToCloud`/`_loadFromCloud`）通过 Cloudflare Worker + KV 存储，按用户名分 key
 
 ### 关键约定
 - HTML 通过 JS 模板字符串生成，用 `.innerHTML` 注入
@@ -73,6 +76,68 @@ node bump-version.js 25       # 设为指定版本
 - 弹窗通过 `.classList.add('show')` / `.classList.remove('show')` 控制
 - 宠物漫游使用 `setInterval`（2 秒间隔）配合 CSS 过渡实现平滑移动
 - BOSS 战斗中使用 `getBattleTarget()`（返回 `currentBoss || currentMonster`）统一访问当前目标
+
+## 用户注册登录
+
+v25 引入完整的注册登录系统，每个用户有独立数据（此前为单账户共享云文档）。
+
+### 客户端 localStorage
+
+- `kids_hero_auth_v1` → `{ username, passwordHash }`，登录态凭据（登出/密码失效时清空）
+- `babyTaskGame_v3` → 当前登录用户的游戏数据副本（登出时清空）
+
+### 密码哈希
+
+客户端 SHA-256（`crypto.subtle.digest`），盐为用户名：
+
+```
+passwordHash = sha256(username + ':' + password)
+hintAnswerHash = sha256(username + ':' + hintAnswer.trim().toLowerCase())
+```
+
+**明文密码/答案从不发送到 Worker**。Worker 只比较哈希。`X-Auth-Token: hero2026safe` 仍作为 App 级防刷门卫（第一道鉴权）。
+
+### Cloudflare Worker 端点
+
+基础 URL：`https://kids-hero-sync.yiyuluzhb.workers.dev`；KV 绑定 `GAME_DATA`；Secret `AUTH_TOKEN=hero2026safe`；源码在本仓库 `worker.js`（需手动粘贴到 Cloudflare Dashboard 部署）。
+
+| 方法 | 路径 | 用途 |
+|---|---|---|
+| POST | `/auth/register` | 注册新用户（可选带初始数据） |
+| POST | `/auth/login` | 登录，返回用户数据 |
+| POST | `/auth/hint` | 查某用户的密码提示问题（忘记密码第一步） |
+| POST | `/auth/reset` | 用提示问题答案重置密码 |
+| POST | `/data/load` | 加载当前用户的云端数据 |
+| POST | `/data/save` | 保存当前用户的数据到云端 |
+
+KV key 格式：`user:<username>` → `{ passwordHash, hint, hintAnswerHash, data, _lastSync, createdAt }`。
+
+旧根路径 `/` 返回 410 Gone（v24 及以前的客户端会被拦住，不会污染数据）。
+
+### 启动流程
+
+```
+init():
+  1. 读 kids_hero_auth_v1
+     a. 存在 → loadData() → goToPage('home') → _loadFromCloud()
+     b. 不存在 → 检查 babyTaskGame_v3 是否非空
+         i.  非空（老用户升级）→ page-auth 注册 tab，默认勾选"上传现有数据"
+         ii. 空 → page-auth 登录 tab
+```
+
+### 登出
+
+`logout()` → 确认对话框 → 清 `kids_hero_auth_v1` + `babyTaskGame_v3` → 停 BGM → `location.reload()`。云端数据保留。
+
+### 凭据失效处理
+
+云同步返回 `INVALID`/`NOT_FOUND` → alert → `_forceLogout()` → 清本地 + reload。
+
+### 三层防御保留
+
+- `saveData()` 未登录直接 return（首屏最强防线）
+- `_syncToCloud()` 未登录 return + 会话未成功加载云端时 return
+- `_loadFromCloud()` 有 `forceReplace` 参数，登录/注册/重置后强制采用云端数据
 
 ## PWA 与 Service Worker
 
@@ -96,10 +161,11 @@ node bump-version.js 25       # 设为指定版本
 
 ## 文件结构
 ```
-├── index.html          # SPA 主页（6个页面 + 多个弹窗）
-├── app.js              # 所有游戏逻辑（约 1900 行）
-├── style.css           # 所有样式（约 1000 行）
+├── index.html          # SPA 主页（7 个页面 + 多个弹窗）
+├── app.js              # 所有游戏逻辑（约 2400 行，含 Auth 模块）
+├── style.css           # 所有样式
 ├── sw.js               # Service Worker（网络优先缓存）
+├── worker.js           # Cloudflare Worker 源码（手动粘贴到 Dashboard 部署）
 ├── manifest.json       # PWA 配置
 ├── bump-version.js     # 版本号自动 bump 脚本
 ├── music/              # 背景音乐 MP3（5 首公版）
@@ -136,6 +202,7 @@ node bump-version.js 25       # 设为指定版本
 ## 注意事项
 
 - 代码修改后发布前务必运行 `node bump-version.js` bump 版本号
+- 改 `worker.js` 后需手动粘贴到 Cloudflare Dashboard 才生效（未自动部署）
 - 添加新的数据字段时，务必在 `_applyDataCompat()` 中加入向后兼容初始化
 - 新增宠物时，除了 `SHOP_ITEMS.pet` 中添加条目，还需：
   1. 在 `PIXEL_PETS` 中定义像素艺术（可选，目前 p_whale/p_shark 未定义但仍可用 emoji 显示）

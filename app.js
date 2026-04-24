@@ -699,6 +699,67 @@ const BGM = {
   }
 };
 
+// ============ 用户认证 ============
+const Auth = {
+  // 客户端哈希：sha256(username + ':' + value)，用户名作为盐
+  async hash(salt, value) {
+    const buf = new TextEncoder().encode(salt + ':' + value);
+    const h = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2, '0')).join('');
+  },
+
+  async _post(path, body) {
+    const res = await fetch(SYNC_URL + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Auth-Token': SYNC_TOKEN },
+      body: JSON.stringify(body)
+    });
+    let json;
+    try { json = await res.json(); }
+    catch (e) { throw new Error('NETWORK'); }
+    if (!json || !json.ok) throw new Error((json && json.error) || 'UNKNOWN');
+    return json;
+  },
+
+  async register({ username, password, hint, hintAnswer, data }) {
+    const passwordHash = await this.hash(username, password);
+    const hintAnswerHash = await this.hash(username, hintAnswer.trim().toLowerCase());
+    await this._post('/auth/register', { username, passwordHash, hint, hintAnswerHash, data });
+    return { username, passwordHash };
+  },
+
+  async login({ username, password }) {
+    const passwordHash = await this.hash(username, password);
+    const json = await this._post('/auth/login', { username, passwordHash });
+    return { username, passwordHash, data: json.data, _lastSync: json._lastSync };
+  },
+
+  async fetchHint({ username }) {
+    const json = await this._post('/auth/hint', { username });
+    return json.hint;
+  },
+
+  async reset({ username, hintAnswer, newPassword }) {
+    const hintAnswerHash = await this.hash(username, hintAnswer.trim().toLowerCase());
+    const newPasswordHash = await this.hash(username, newPassword);
+    const json = await this._post('/auth/reset', { username, hintAnswerHash, newPasswordHash });
+    return { username, passwordHash: newPasswordHash, data: json.data, _lastSync: json._lastSync };
+  }
+};
+
+const AUTH_ERR_MSG = {
+  USER_EXISTS: '用户名已存在，换一个试试',
+  INVALID: '用户名或密码错误',
+  NOT_FOUND: '用户名不存在',
+  WRONG_ANSWER: '答案错误',
+  BAD_USERNAME: '用户名格式错误（3-20 字符，中英文/数字/下划线）',
+  MISSING: '请填写完整',
+  NETWORK: '网络错误，请重试',
+  DEPRECATED: '服务端已升级，请刷新页面',
+  FORBIDDEN: '访问被拒绝',
+  UNKNOWN: '未知错误'
+};
+
 // ============ 应用主类 ============
 
 const app = {
@@ -711,13 +772,15 @@ const app = {
   battleAnimating: false,
   currentNurturePetId: null,
   _syncTimer: null,
+  _authUser: null,       // { username, passwordHash } — 已登录用户
+  _authTab: 'login',     // 'login' | 'register' | 'reset' — 登录页当前 tab
+  _needMigration: false, // 本机有遗留数据，首次注册可勾选"上传现有数据"
 
   // ---- 初始化 ----
   init() {
     // 注册 Service Worker（网络优先策略，确保 PWA 及时更新）
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').then((reg) => {
-        // 检测到新版本时自动激活
         reg.addEventListener('updatefound', () => {
           const nw = reg.installing;
           if (!nw) return;
@@ -728,7 +791,6 @@ const app = {
           });
         });
       }).catch((e) => console.warn('[SW] 注册失败:', e));
-      // 新 SW 接管后刷新页面一次，确保加载新资源
       let refreshed = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (refreshed) return;
@@ -748,21 +810,55 @@ const app = {
     } else {
       document.addEventListener('WeixinJSBridgeReady', unlockAudio, { once: true });
     }
-    // 关键：在 loadData() 之前从 localStorage 读取原始 _lastSync 快照
-    // 因为 loadData() 内部会调用 saveData() 把时间戳改成 now
-    let origLastSync = 0;
-    try {
-      const raw = localStorage.getItem('babyTaskGame_v3');
-      if (raw) origLastSync = (JSON.parse(raw)._lastSync) || 0;
-    } catch(e) {}
-    this._bootSync = origLastSync;
-    // 阻止 init 期间的云同步，防止把默认数据推到云端覆盖真实数据
-    this._cloudLoadPending = true;
-    this.loadData();
-    this.renderHome();
-    this.updateAllPoints();
-    this.updateMuteButton();
-    this._loadFromCloud();
+
+    // 检查登录态
+    const authRaw = localStorage.getItem('kids_hero_auth_v1');
+    if (authRaw) {
+      try {
+        this._authUser = JSON.parse(authRaw);
+      } catch (e) {
+        localStorage.removeItem('kids_hero_auth_v1');
+        this._authUser = null;
+      }
+    }
+
+    if (this._authUser && this._authUser.username && this._authUser.passwordHash) {
+      // 已登录 — 加载本地数据并从云端同步
+      let origLastSync = 0;
+      try {
+        const raw = localStorage.getItem('babyTaskGame_v3');
+        if (raw) origLastSync = (JSON.parse(raw)._lastSync) || 0;
+      } catch(e) {}
+      this._bootSync = origLastSync;
+      this._cloudLoadPending = true;
+      this.loadData();
+      this.showPage('home');
+      this.renderHome();
+      this.updateAllPoints();
+      this.updateMuteButton();
+      this._updateLogoutBtn();
+      this._loadFromCloud();
+    } else {
+      // 未登录 — 判断是否有老数据需要迁移
+      const legacy = localStorage.getItem('babyTaskGame_v3');
+      let hasExisting = false;
+      if (legacy) {
+        try { hasExisting = !this._isDataEmpty(JSON.parse(legacy)); } catch(e) {}
+      }
+      this._needMigration = hasExisting;
+      this.loadData();  // 仍需 this.data 存在以便注册时可上传
+      this.showPage('auth');
+      this.switchAuthTab(hasExisting ? 'register' : 'login');
+      this.updateMuteButton();
+    }
+  },
+
+  // 未登录也能安全调用（无 sync-indicator 等元素时跳过）
+  _updateLogoutBtn() {
+    const btn = document.getElementById('logout-btn');
+    if (!btn) return;
+    btn.style.display = this._authUser ? '' : 'none';
+    btn.title = this._authUser ? ('退出 ' + this._authUser.username) : '';
   },
 
   // ---- 数据管理 ----
@@ -770,38 +866,42 @@ const app = {
     return { items: [], floor: null, pets: [] };
   },
 
+  _buildDefaultData(oldPoints = 0) {
+    return {
+      currentCharacter: 'leidi',
+      points: oldPoints,
+      houses: {
+        leidi: this.getDefaultHouse(),
+        diga: this.getDefaultHouse()
+      },
+      battle: {
+        currentMonster: null,
+        currentBoss: null,
+        killCount: 0,
+        lastFreeAttackDate: null,
+        lastPetAttackDates: {},
+        trophies: [],
+        bossTrophies: []
+      },
+      music: { owned: [], current: null, enabled: true },
+      taskHistory: [],
+      parentPin: null
+    };
+  },
+
   loadData() {
     const saved = localStorage.getItem('babyTaskGame_v3');
     if (saved) {
       this.data = JSON.parse(saved);
     } else {
-      // 迁移旧数据积分
       let oldPoints = 0;
       for (const key of ['babyTaskGame_v2', 'babyTaskGame']) {
         const old = localStorage.getItem(key);
         if (old) { try { oldPoints = JSON.parse(old).points || 0; } catch(e) {} break; }
       }
-      this.data = {
-        currentCharacter: 'leidi',
-        points: oldPoints,
-        houses: {
-          leidi: this.getDefaultHouse(),
-          diga: this.getDefaultHouse()
-        },
-        battle: {
-          currentMonster: null,
-          currentBoss: null,
-          killCount: 0,
-          lastFreeAttackDate: null,
-          lastPetAttackDates: {},
-          trophies: [],
-          bossTrophies: []
-        },
-        music: { owned: [], current: null, enabled: true },
-        taskHistory: [],
-        parentPin: null
-      };
-      this.saveData();
+      this.data = this._buildDefaultData(oldPoints);
+      // 已登录才写 localStorage + 推云端；未登录仅在内存中保留默认数据（认证页用）
+      if (this._authUser) this.saveData();
     }
     this._applyDataCompat();
     this.decayAllPetStats();
@@ -861,6 +961,8 @@ const app = {
   },
 
   saveData() {
+    // 未登录不写磁盘也不推云（认证页面展示用的 this.data 仅存在于内存）
+    if (!this._authUser) return;
     this.data._lastSync = Date.now();
     localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
     // init 期间阻止云同步（防止默认数据污染云端）
@@ -941,29 +1043,36 @@ const app = {
 
   // ---- 云同步 ----
   async _syncToCloud() {
-    // 硬防线 1：空数据绝对不允许推送到云端（防止污染其他客户端）
-    if (this._isDataEmpty(this.data)) {
-      console.warn('[Sync] 本地数据为空，拒绝推送到云端');
-      this._updateSyncStatus('ok');
-      return;
-    }
-    // 硬防线 2：会话级兜底——如果本次会话从未成功从云端拉到过真实数据，
-    // 且本地启动时 localStorage 也是空的，则禁用所有云推送
-    // 这防止：新设备/新 PWA 第一次打开时，因为 fetch 慢或失败，用户误操作后
-    // 把 "初始空数据 + 几分新数据" 推上去覆盖云端的真实进度
-    if (!this._cloudEverLoaded && (this._bootSync || 0) === 0) {
-      console.warn('[Sync] 会话未成功加载过云端 + 本地启动为空，禁用推送（保护云端）');
+    // 未登录绝对不推送
+    if (!this._authUser) return;
+    // 硬防线：会话级兜底——如果本次会话从未成功从云端拉到过数据，禁止推送
+    // 防止 fetch 慢时用户误操作用初始默认数据覆盖云端真实进度
+    if (!this._cloudEverLoaded) {
+      console.warn('[Sync] 会话未成功加载过云端数据，禁用推送（保护云端）');
       this._updateSyncStatus('error');
       return;
     }
     this._updateSyncStatus('syncing');
     try {
-      const res = await fetch(SYNC_URL, {
+      const res = await fetch(SYNC_URL + '/data/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': SYNC_TOKEN },
-        body: JSON.stringify(this.data),
+        body: JSON.stringify({
+          username: this._authUser.username,
+          passwordHash: this._authUser.passwordHash,
+          data: this.data
+        }),
       });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json || !json.ok) {
+        // 401/INVALID — 凭据失效，强制登出
+        if (json && (json.error === 'INVALID' || json.error === 'NOT_FOUND')) {
+          alert('登录已失效，请重新登录');
+          this._forceLogout();
+          return;
+        }
+        throw new Error((json && json.error) || 'HTTP ' + res.status);
+      }
       this._updateSyncStatus('ok');
     } catch (e) {
       console.warn('[Sync] 上传失败:', e);
@@ -991,42 +1100,67 @@ const app = {
     return true;
   },
 
-  async _loadFromCloud() {
+  async _loadFromCloud(opts = {}) {
+    const { forceReplace = false } = opts;
+    if (!this._authUser) {
+      this._cloudLoadPending = false;
+      return;
+    }
     this._updateSyncStatus('syncing');
     let loadOk = false;
     let cloudAdopted = false;
     try {
-      const res = await fetch(SYNC_URL, {
-        headers: { 'X-Auth-Token': SYNC_TOKEN },
+      const res = await fetch(SYNC_URL + '/data/load', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': SYNC_TOKEN },
+        body: JSON.stringify({
+          username: this._authUser.username,
+          passwordHash: this._authUser.passwordHash
+        })
       });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const cloud = await res.json();
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json || !json.ok) {
+        if (json && (json.error === 'INVALID' || json.error === 'NOT_FOUND')) {
+          alert('登录已失效，请重新登录');
+          this._forceLogout();
+          return;
+        }
+        throw new Error((json && json.error) || 'HTTP ' + res.status);
+      }
       loadOk = true;
-      if (cloud && cloud._lastSync) {
+      const cloud = json.data;
+      const cloudTs = json._lastSync || 0;
+      if (cloud && typeof cloud === 'object') {
         const bootTs = this._bootSync || 0;
-        // 完整性守卫：如果云端是空的默认状态但本地有真实数据，不要盲目采用云端
-        // 这样可以从"云端被意外清空"的事故中恢复 — 本地数据会被推回云端
         const cloudEmpty = this._isDataEmpty(cloud);
         const localHasData = !this._isDataEmpty(this.data);
-        if (cloudEmpty && localHasData) {
+        // 登录/注册后强制采用云端（即使云端为空，因为我们知道它是权威）
+        if (forceReplace) {
+          this.data = Object.keys(cloud).length > 0 ? cloud : this._buildDefaultData();
+          this._applyDataCompat();
+          this.decayAllPetStats();
+          if (!this.data.battle.currentMonster) this.spawnMonster();
+          this.data._lastSync = cloudTs || Date.now();
+          localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
+          this._bootSync = this.data._lastSync;
+          cloudAdopted = true;
+        } else if (cloudEmpty && localHasData) {
           console.warn('[Sync] 云端为空但本地有数据，保留本地并推送（恢复云端）');
-          // 不采用云端，走到下面的推送分支
-        } else if (cloud._lastSync > bootTs) {
+        } else if (cloudTs > bootTs) {
           this.data = cloud;
           this._applyDataCompat();
           this.decayAllPetStats();
           if (!this.data.battle.currentMonster) this.spawnMonster();
+          this.data._lastSync = cloudTs;
           localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
-          this._bootSync = this.data._lastSync;
+          this._bootSync = cloudTs;
           cloudAdopted = true;
+        }
+        this._cloudEverLoaded = true;   // 登录后 load 成功 → 放开推送闸门
+        if (cloudAdopted) {
           this.renderHome();
           this.updateAllPoints();
           this.updateMuteButton();
-        }
-        // 无论是否采用云端，只要成功拉到了非空云端数据，本会话就标记为"已知道云端有数据"
-        // 这样后续的 _syncToCloud 才能放行
-        if (!this._isDataEmpty(cloud)) {
-          this._cloudEverLoaded = true;
         }
       }
       this._updateSyncStatus('ok');
@@ -1034,13 +1168,20 @@ const app = {
       console.warn('[Sync] 加载失败:', e);
       this._updateSyncStatus('error');
     }
-    // 初始加载完成 — 解除云同步阻塞
     this._cloudLoadPending = false;
-    // 只有本地确实有数据（_bootSync > 0 说明 localStorage 之前有内容）且没有采用云端数据时才推送
-    // 这避免了"首次安装 + 云端为空"的场景下把空默认数据污染到云端
-    if (loadOk && !cloudAdopted && this._bootSync > 0) {
+    // 本地有真实数据且未采用云端 → 推送回云端（恢复云端场景）
+    if (loadOk && !cloudAdopted && !this._isDataEmpty(this.data)) {
       this._syncToCloud();
     }
+  },
+
+  // 凭据失效时的强制登出（不弹确认）
+  _forceLogout() {
+    localStorage.removeItem('kids_hero_auth_v1');
+    localStorage.removeItem('babyTaskGame_v3');
+    this._authUser = null;
+    BGM.stop();
+    setTimeout(() => location.reload(), 300);
   },
 
   _updateSyncStatus(status) {
@@ -1050,6 +1191,230 @@ const app = {
     if (status === 'syncing') { el.textContent = '☁️'; }
     else if (status === 'ok') { el.textContent = '☁️'; }
     else if (status === 'error') { el.textContent = '⚠️'; }
+  },
+
+  // ---- 认证：登录/注册/重置 ----
+  switchAuthTab(tab) {
+    this._authTab = tab;
+    document.querySelectorAll('.auth-tab').forEach(el => {
+      el.classList.toggle('active', el.dataset.tab === tab);
+    });
+    this.renderAuth();
+  },
+
+  renderAuth() {
+    const box = document.getElementById('auth-form');
+    if (!box) return;
+    const tab = this._authTab || 'login';
+    if (tab === 'login') {
+      box.innerHTML = `
+        <input class="auth-input" id="auth-login-username" type="text" placeholder="用户名" autocomplete="username" maxlength="20">
+        <input class="auth-input" id="auth-login-password" type="password" placeholder="密码" autocomplete="current-password" maxlength="40">
+        <div class="auth-error" id="auth-login-error"></div>
+        <button class="auth-btn auth-btn-primary" onclick="app.doLogin()">登录</button>
+      `;
+    } else if (tab === 'register') {
+      const migrationBlock = this._needMigration ? `
+        <label class="auth-checkbox">
+          <input type="checkbox" id="auth-register-migrate" checked>
+          <span>把本机现有游戏数据上传到我的账户（否则从零开始）</span>
+        </label>
+      ` : '';
+      box.innerHTML = `
+        <input class="auth-input" id="auth-register-username" type="text" placeholder="用户名（3-20 字符）" autocomplete="username" maxlength="20">
+        <input class="auth-input" id="auth-register-password" type="password" placeholder="密码（至少 4 位）" autocomplete="new-password" maxlength="40">
+        <input class="auth-input" id="auth-register-password2" type="password" placeholder="再输一次密码" autocomplete="new-password" maxlength="40">
+        <input class="auth-input" id="auth-register-hint" type="text" placeholder="密码提示问题（如：我的宠物叫什么）" maxlength="50">
+        <input class="auth-input" id="auth-register-answer" type="text" placeholder="答案（忘记密码时用于验证）" maxlength="50">
+        ${migrationBlock}
+        <div class="auth-error" id="auth-register-error"></div>
+        <button class="auth-btn auth-btn-primary" onclick="app.doRegister()">注册</button>
+      `;
+    } else if (tab === 'reset') {
+      box.innerHTML = `
+        <input class="auth-input" id="auth-reset-username" type="text" placeholder="用户名" autocomplete="username" maxlength="20">
+        <button class="auth-btn auth-btn-secondary" onclick="app.fetchHintForReset()">查看我的提示问题</button>
+        <div class="auth-hint" id="auth-reset-hint"></div>
+        <input class="auth-input" id="auth-reset-answer" type="text" placeholder="提示问题的答案" maxlength="50">
+        <input class="auth-input" id="auth-reset-password" type="password" placeholder="新密码（至少 4 位）" autocomplete="new-password" maxlength="40">
+        <div class="auth-error" id="auth-reset-error"></div>
+        <button class="auth-btn auth-btn-primary" onclick="app.doReset()">重置密码并登录</button>
+      `;
+    }
+  },
+
+  _showAuthError(id, code) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = AUTH_ERR_MSG[code] || ('出错了: ' + code);
+  },
+
+  _clearAuthError(id) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  },
+
+  _validateUsername(u) {
+    return /^[一-龥a-zA-Z0-9_]{3,20}$/.test(u);
+  },
+
+  async doLogin() {
+    this._clearAuthError('auth-login-error');
+    const username = (document.getElementById('auth-login-username').value || '').trim();
+    const password = document.getElementById('auth-login-password').value || '';
+    if (!this._validateUsername(username)) {
+      this._showAuthError('auth-login-error', 'BAD_USERNAME'); return;
+    }
+    if (password.length < 4) {
+      document.getElementById('auth-login-error').textContent = '密码至少 4 位'; return;
+    }
+    const btn = document.querySelector('#auth-form .auth-btn-primary');
+    if (btn) { btn.disabled = true; btn.textContent = '登录中…'; }
+    try {
+      const { passwordHash, data, _lastSync } = await Auth.login({ username, password });
+      this._authUser = { username, passwordHash };
+      localStorage.setItem('kids_hero_auth_v1', JSON.stringify(this._authUser));
+      this.data = (data && Object.keys(data).length > 0) ? data : this._buildDefaultData();
+      this._applyDataCompat();
+      this.decayAllPetStats();
+      if (!this.data.battle.currentMonster) this.spawnMonster();
+      this.data._lastSync = _lastSync || Date.now();
+      localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
+      this._bootSync = this.data._lastSync;
+      this._cloudEverLoaded = true;
+      this._cloudLoadPending = false;
+      this.showPage('home');
+      this.renderHome();
+      this.updateAllPoints();
+      this.updateMuteButton();
+      this._updateLogoutBtn();
+    } catch (e) {
+      this._showAuthError('auth-login-error', e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '登录'; }
+    }
+  },
+
+  async doRegister() {
+    this._clearAuthError('auth-register-error');
+    const username = (document.getElementById('auth-register-username').value || '').trim();
+    const password = document.getElementById('auth-register-password').value || '';
+    const password2 = document.getElementById('auth-register-password2').value || '';
+    const hint = (document.getElementById('auth-register-hint').value || '').trim();
+    const hintAnswer = (document.getElementById('auth-register-answer').value || '').trim();
+    const migrateEl = document.getElementById('auth-register-migrate');
+    const migrate = !!(migrateEl && migrateEl.checked);
+
+    if (!this._validateUsername(username)) {
+      this._showAuthError('auth-register-error', 'BAD_USERNAME'); return;
+    }
+    if (password.length < 4) {
+      document.getElementById('auth-register-error').textContent = '密码至少 4 位'; return;
+    }
+    if (password !== password2) {
+      document.getElementById('auth-register-error').textContent = '两次密码不一致'; return;
+    }
+    if (!hint || !hintAnswer) {
+      document.getElementById('auth-register-error').textContent = '请填写提示问题和答案'; return;
+    }
+
+    // 如果勾了迁移，把当前 this.data 作为初始数据；否则构建默认数据
+    const dataToUpload = migrate ? this.data : this._buildDefaultData();
+
+    const btn = document.querySelector('#auth-form .auth-btn-primary');
+    if (btn) { btn.disabled = true; btn.textContent = '注册中…'; }
+    try {
+      const { passwordHash } = await Auth.register({
+        username, password, hint, hintAnswer, data: dataToUpload
+      });
+      this._authUser = { username, passwordHash };
+      localStorage.setItem('kids_hero_auth_v1', JSON.stringify(this._authUser));
+      this.data = dataToUpload;
+      this._applyDataCompat();
+      this.decayAllPetStats();
+      if (!this.data.battle.currentMonster) this.spawnMonster();
+      this.data._lastSync = Date.now();
+      localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
+      this._bootSync = this.data._lastSync;
+      this._cloudEverLoaded = true;
+      this._cloudLoadPending = false;
+      this._needMigration = false;
+      this.showPage('home');
+      this.renderHome();
+      this.updateAllPoints();
+      this.updateMuteButton();
+      this._updateLogoutBtn();
+    } catch (e) {
+      this._showAuthError('auth-register-error', e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '注册'; }
+    }
+  },
+
+  async fetchHintForReset() {
+    this._clearAuthError('auth-reset-error');
+    const hintEl = document.getElementById('auth-reset-hint');
+    if (hintEl) hintEl.textContent = '';
+    const username = (document.getElementById('auth-reset-username').value || '').trim();
+    if (!this._validateUsername(username)) {
+      this._showAuthError('auth-reset-error', 'BAD_USERNAME'); return;
+    }
+    try {
+      const hint = await Auth.fetchHint({ username });
+      if (hintEl) hintEl.textContent = '提示：' + hint;
+    } catch (e) {
+      this._showAuthError('auth-reset-error', e.message);
+    }
+  },
+
+  async doReset() {
+    this._clearAuthError('auth-reset-error');
+    const username = (document.getElementById('auth-reset-username').value || '').trim();
+    const hintAnswer = (document.getElementById('auth-reset-answer').value || '').trim();
+    const newPassword = document.getElementById('auth-reset-password').value || '';
+    if (!this._validateUsername(username)) {
+      this._showAuthError('auth-reset-error', 'BAD_USERNAME'); return;
+    }
+    if (!hintAnswer) {
+      document.getElementById('auth-reset-error').textContent = '请填写答案'; return;
+    }
+    if (newPassword.length < 4) {
+      document.getElementById('auth-reset-error').textContent = '新密码至少 4 位'; return;
+    }
+    const btn = document.querySelector('#auth-form .auth-btn-primary');
+    if (btn) { btn.disabled = true; btn.textContent = '处理中…'; }
+    try {
+      const { passwordHash, data, _lastSync } = await Auth.reset({ username, hintAnswer, newPassword });
+      this._authUser = { username, passwordHash };
+      localStorage.setItem('kids_hero_auth_v1', JSON.stringify(this._authUser));
+      this.data = (data && Object.keys(data).length > 0) ? data : this._buildDefaultData();
+      this._applyDataCompat();
+      this.decayAllPetStats();
+      if (!this.data.battle.currentMonster) this.spawnMonster();
+      this.data._lastSync = _lastSync || Date.now();
+      localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
+      this._bootSync = this.data._lastSync;
+      this._cloudEverLoaded = true;
+      this._cloudLoadPending = false;
+      this.showPage('home');
+      this.renderHome();
+      this.updateAllPoints();
+      this.updateMuteButton();
+      this._updateLogoutBtn();
+    } catch (e) {
+      this._showAuthError('auth-reset-error', e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '重置密码并登录'; }
+    }
+  },
+
+  logout() {
+    if (!confirm('确定要退出登录吗？\n本设备的数据会清除，但云端数据保留。')) return;
+    localStorage.removeItem('kids_hero_auth_v1');
+    localStorage.removeItem('babyTaskGame_v3');
+    this._authUser = null;
+    BGM.stop();
+    location.reload();
   },
 
   // ---- 页面导航 ----

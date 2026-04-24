@@ -2,7 +2,7 @@
 // 每次打开 PWA 时优先从服务器拉新版本，离线时才用缓存
 // 版本号改动会强制 Service Worker 更新并清空老缓存
 
-const CACHE_VERSION = 'v24';
+const CACHE_VERSION = 'v25';
 const CACHE_NAME = 'kids-hero-home-' + CACHE_VERSION;
 
 // 安装阶段：跳过等待，立即激活新 SW
