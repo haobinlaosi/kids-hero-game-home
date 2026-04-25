@@ -33,7 +33,10 @@ const SHOP_ITEMS = {
       { id: 'f_bath', name: '浴缸', icon: '🛁', price: 30, pos: { right:'25%', bottom:'5%', size:'30px' } },
       { id: 'f_piano', name: '钢琴', icon: '🎹', price: 35, pos: { left:'12%', bottom:'5%', size:'32px' } },
       { id: 'f_computer', name: '电脑', icon: '💻', price: 25, pos: { right:'18%', bottom:'55%', size:'26px' } },
-      { id: 'f_fridge', name: '冰箱', icon: '🧊', price: 20, pos: { right:'2%', bottom:'55%', size:'28px' } }
+      { id: 'f_fridge', name: '冰箱', icon: '🧊', price: 20, pos: { right:'2%', bottom:'55%', size:'28px' } },
+      // BOSS 专属奖励（不在商店出售，bossOnly）
+      { id: 'br_b1', name: '火焰王座', icon: '🔥', price: 0, bossOnly: true, pos: { left:'38%', bottom:'25%', size:'40px' } },
+      { id: 'br_b2', name: '冰雕熊',   icon: '🐻‍❄️', price: 0, bossOnly: true, pos: { right:'35%', bottom:'30%', size:'40px' } }
     ]
   },
   wallDecor: {
@@ -48,7 +51,10 @@ const SHOP_ITEMS = {
       { id: 'w_map', name: '世界地图', icon: '🗺️', price: 20, pos: { right:'5%', top:'50%', size:'26px' } },
       { id: 'w_note', name: '音符墙', icon: '🎵', price: 15, pos: { left:'22%', top:'50%', size:'22px' } },
       { id: 'w_heart', name: '爱心墙', icon: '❤️', price: 10, pos: { right:'22%', top:'48%', size:'24px' } },
-      { id: 'w_star', name: '星星灯', icon: '🌟', price: 20, pos: { left:'55%', top:'5%', size:'24px' } }
+      { id: 'w_star', name: '星星灯', icon: '🌟', price: 20, pos: { left:'55%', top:'5%', size:'24px' } },
+      // BOSS 专属奖励（不在商店出售，bossOnly）
+      { id: 'br_b3', name: '龙鳞盾', icon: '🛡️', price: 0, bossOnly: true, pos: { left:'40%', top:'30%', size:'34px' } },
+      { id: 'br_b4', name: '雷神锤', icon: '🔨', price: 0, bossOnly: true, pos: { right:'40%', top:'30%', size:'34px' } }
     ]
   },
   floor: {
@@ -76,7 +82,9 @@ const SHOP_ITEMS = {
       { id: 's_rainbow', name: '彩虹桥', icon: '🌈', price: 50, pos: { left:'30%', top:'0%', size:'34px' } },
       { id: 's_trophy', name: '奖杯', icon: '🏆', price: 45, pos: { right:'30%', bottom:'60%', size:'26px' } },
       { id: 's_castle', name: '小城堡', icon: '🏰', price: 60, pos: { right:'3%', bottom:'55%', size:'34px' } },
-      { id: 's_ferris', name: '摩天轮', icon: '🎡', price: 55, pos: { left:'3%', bottom:'50%', size:'34px' } }
+      { id: 's_ferris', name: '摩天轮', icon: '🎡', price: 55, pos: { left:'3%', bottom:'50%', size:'34px' } },
+      // BOSS 专属奖励（不在商店出售，bossOnly）
+      { id: 'br_b5', name: '黄金王冠', icon: '👑', price: 0, bossOnly: true, pos: { left:'45%', bottom:'25%', size:'40px' } }
     ]
   },
   pet: {
@@ -119,11 +127,16 @@ const MONSTERS = [
 ];
 
 const BOSSES = [
-  { id: 'b1', name: '炎魔王',     icon: '🔥👹', maxHp: 50, rewardPoints: 50 },
-  { id: 'b2', name: '冰封巨兽',   icon: '❄️🦖', maxHp: 50, rewardPoints: 50 },
-  { id: 'b3', name: '暗影恶龙',   icon: '🐲',   maxHp: 50, rewardPoints: 50 },
-  { id: 'b4', name: '雷霆魔神',   icon: '⚡👿', maxHp: 50, rewardPoints: 50 },
-  { id: 'b5', name: '终极大魔王', icon: '💀',   maxHp: 50, rewardPoints: 80 }
+  { id: 'b1', name: '炎魔王',     icon: '🔥👹', maxHp: 50, rewardPoints: 50,
+    rewardItem: { id: 'br_b1', name: '火焰王座', icon: '🔥', zone: 'floor' } },
+  { id: 'b2', name: '冰封巨兽',   icon: '❄️🦖', maxHp: 50, rewardPoints: 50,
+    rewardItem: { id: 'br_b2', name: '冰雕熊',   icon: '🐻‍❄️', zone: 'floor' } },
+  { id: 'b3', name: '暗影恶龙',   icon: '🐲',   maxHp: 50, rewardPoints: 50,
+    rewardItem: { id: 'br_b3', name: '龙鳞盾',   icon: '🛡️', zone: 'wall' } },
+  { id: 'b4', name: '雷霆魔神',   icon: '⚡👿', maxHp: 50, rewardPoints: 50,
+    rewardItem: { id: 'br_b4', name: '雷神锤',   icon: '🔨', zone: 'wall' } },
+  { id: 'b5', name: '终极大魔王', icon: '💀',   maxHp: 50, rewardPoints: 80,
+    rewardItem: { id: 'br_b5', name: '黄金王冠', icon: '👑', zone: 'special' } }
 ];
 
 // ============ 像素宠物 ============
@@ -952,7 +965,8 @@ const app = {
     }
     this._applyDataCompat();
     this.decayAllPetStats();
-    if (!this.data.battle.currentMonster) this.spawnMonster();
+    this._checkBossExpiry();
+    if (!this.data.battle.currentMonster && !this.data.battle.currentBoss) this.spawnMonster();
   },
 
   // ---- 宠物培养数据 ----
@@ -1027,6 +1041,10 @@ const app = {
     if (this.data.battle.killCount === undefined) this.data.battle.killCount = 0;
     if (!this.data.battle.bossTrophies) this.data.battle.bossTrophies = [];
     if (this.data.battle.currentBoss === undefined) this.data.battle.currentBoss = null;
+    // BOSS 限时字段（v28+）：老 currentBoss 无 spawnedAt → 给个宽限期（从现在起算 3 天）
+    if (this.data.battle.currentBoss && this.data.battle.currentBoss.spawnedAt === undefined) {
+      this.data.battle.currentBoss.spawnedAt = Date.now();
+    }
     // 音乐系统字段兼容
     if (!this.data.music) this.data.music = { owned: [], current: null, enabled: true };
     if (!this.data.music.owned) this.data.music.owned = [];
@@ -1186,7 +1204,7 @@ const app = {
           this.data = Object.keys(cloud).length > 0 ? cloud : this._buildDefaultData();
           this._applyDataCompat();
           this.decayAllPetStats();
-          if (!this.data.battle.currentMonster) this.spawnMonster();
+          if (!this.data.battle.currentMonster && !this.data.battle.currentBoss) this.spawnMonster();
           this.data._lastSync = cloudTs || Date.now();
           localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
           this._bootSync = this.data._lastSync;
@@ -1197,7 +1215,7 @@ const app = {
           this.data = cloud;
           this._applyDataCompat();
           this.decayAllPetStats();
-          if (!this.data.battle.currentMonster) this.spawnMonster();
+          if (!this.data.battle.currentMonster && !this.data.battle.currentBoss) this.spawnMonster();
           this.data._lastSync = cloudTs;
           localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
           this._bootSync = cloudTs;
@@ -1346,7 +1364,7 @@ const app = {
       this.data = (data && Object.keys(data).length > 0) ? data : this._buildDefaultData();
       this._applyDataCompat();
       this.decayAllPetStats();
-      if (!this.data.battle.currentMonster) this.spawnMonster();
+      if (!this.data.battle.currentMonster && !this.data.battle.currentBoss) this.spawnMonster();
       this.data._lastSync = _lastSync || Date.now();
       localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
       this._bootSync = this.data._lastSync;
@@ -1401,7 +1419,7 @@ const app = {
       this.data = dataToUpload;
       this._applyDataCompat();
       this.decayAllPetStats();
-      if (!this.data.battle.currentMonster) this.spawnMonster();
+      if (!this.data.battle.currentMonster && !this.data.battle.currentBoss) this.spawnMonster();
       this.data._lastSync = Date.now();
       localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
       this._bootSync = this.data._lastSync;
@@ -1459,7 +1477,7 @@ const app = {
       this.data = (data && Object.keys(data).length > 0) ? data : this._buildDefaultData();
       this._applyDataCompat();
       this.decayAllPetStats();
-      if (!this.data.battle.currentMonster) this.spawnMonster();
+      if (!this.data.battle.currentMonster && !this.data.battle.currentBoss) this.spawnMonster();
       this.data._lastSync = _lastSync || Date.now();
       localStorage.setItem('babyTaskGame_v3', JSON.stringify(this.data));
       this._bootSync = this.data._lastSync;
@@ -1956,7 +1974,7 @@ const app = {
     `).join('');
 
     const grid = document.getElementById('shop-grid');
-    const items = SHOP_ITEMS[this.shopCategory].items;
+    const items = SHOP_ITEMS[this.shopCategory].items.filter(i => !i.bossOnly);
     const charId = this.data.currentCharacter;
     const house = this.data.houses[charId];
     const floorOwned = house.floor && house.floor.owned ? house.floor.owned : [];
@@ -2482,9 +2500,28 @@ const app = {
     let avail = BOSSES.filter(b => !defeated.includes(b.id));
     if (avail.length === 0) avail = [...BOSSES];
     const b = avail[Math.floor(Math.random() * avail.length)];
-    this.data.battle.currentBoss = { ...b, hp: b.maxHp };
+    this.data.battle.currentBoss = { ...b, hp: b.maxHp, spawnedAt: Date.now() };
     this.data.battle.currentMonster = null;
     this.saveData();
+  },
+
+  // 检查 BOSS 是否超时（3 天没打完则 BOSS 逃跑）
+  // 返回 true 表示 BOSS 已逃跑（已清空 currentBoss），调用方应继续处理
+  _checkBossExpiry() {
+    const boss = this.data.battle.currentBoss;
+    if (!boss) return false;
+    const spawnedAt = boss.spawnedAt || 0;
+    if (spawnedAt === 0) return false;  // 老数据无 spawnedAt 不强制
+    const THREE_DAYS = 3 * 24 * 3600 * 1000;
+    if (Date.now() - spawnedAt > THREE_DAYS) {
+      const name = boss.name;
+      this.data.battle.currentBoss = null;
+      this.saveData();
+      // 让 alert 在下一帧弹（避免阻塞渲染）
+      setTimeout(() => alert(`👑 ${name} 逃跑了！下次再战！`), 100);
+      return true;
+    }
+    return false;
   },
 
   getBattleTarget() {
@@ -2508,6 +2545,8 @@ const app = {
   },
 
   renderBattle() {
+    // BOSS 限时检查（如逃跑则清空，让下一行重新刷小怪）
+    this._checkBossExpiry();
     const target = this.getBattleTarget();
     if (!target) { this.spawnMonster(); return this.renderBattle(); }
     const isBoss = this.isBossBattle();
@@ -2642,9 +2681,19 @@ const app = {
       this.data.battle.bossTrophies.push({ id: b.id, name: b.name, icon: b.icon, defeatedDate: this.getToday() });
       this.data.battle.currentBoss = null;
       this._justDefeatedBoss = true;
-      // 发奖励
+      // 发奖励：积分
       const reward = b.rewardPoints || 50;
       this.data.points += reward;
+      // 发奖励：BOSS 专属装饰加入当前角色的小屋（如已有则跳过，避免重复击败同一 BOSS 时多次添加）
+      let rewardItem = null;
+      if (b.rewardItem) {
+        const charId = this.data.currentCharacter;
+        const house = this.data.houses[charId];
+        if (!house.items.includes(b.rewardItem.id)) {
+          house.items.push(b.rewardItem.id);
+        }
+        rewardItem = b.rewardItem;
+      }
       this.saveData();
       this.updateAllPoints();
       SFX.play('bossVictory');
@@ -2653,7 +2702,10 @@ const app = {
       setTimeout(() => this.celebrate(), 300);
       if (iconEl) iconEl.textContent = '👑';
       if (titleEl) { titleEl.textContent = 'BOSS 被击败啦！'; titleEl.style.color = '#FFB300'; }
-      textEl.innerHTML = `你打败了 <b>${b.name}</b>！<br><span style="color:#FFB300;font-size:20px;font-weight:800">+${reward} 积分</span>`;
+      const itemLine = rewardItem
+        ? `<br><span style="color:#666;font-size:15px">获得专属装饰：${rewardItem.icon} ${rewardItem.name}</span>`
+        : '';
+      textEl.innerHTML = `你打败了 <b>${b.name}</b>！<br><span style="color:#FFB300;font-size:20px;font-weight:800">+${reward} 积分</span>${itemLine}`;
       modal.classList.add('boss-victory');
     } else {
       const m = this.data.battle.currentMonster;
@@ -2677,13 +2729,12 @@ const app = {
     modal.classList.remove('boss-victory');
     // 判断下一个对手
     if (!this.data.battle.currentBoss && !this.data.battle.currentMonster) {
-      const kc = this.data.battle.killCount || 0;
-      // 刚击败 BOSS 的话直接回到小怪
+      // 刚击败 BOSS 的话直接回到小怪（避免连续刷 BOSS）
       if (this._justDefeatedBoss) {
         this._justDefeatedBoss = false;
         this.spawnMonster();
-      } else if (kc > 0 && kc % 5 === 0) {
-        // 累计击杀每 5 只触发 BOSS
+      } else if (Math.random() < 0.25) {
+        // 25% 随机触发 BOSS
         this.spawnBoss();
       } else {
         this.spawnMonster();
