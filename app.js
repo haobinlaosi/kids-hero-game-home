@@ -571,7 +571,8 @@ function renderPixelPet(petId, mood) {
 }
 
 // ============ 云同步配置 ============
-const SYNC_URL = 'https://kids-hero-sync.yiyuluzhb.workers.dev';
+// 阿里云 Function Compute 部署的同步后端（替换原 Cloudflare Worker，因 workers.dev 在中国大陆部分网络不可达）
+const SYNC_URL = 'https://kids-hero-sync-hvwpmkqqqp.cn-shenzhen.fcapp.run';
 const SYNC_TOKEN = 'hero2026safe';
 
 // ============ 音效引擎 ============
@@ -1222,9 +1223,10 @@ const app = {
   },
 
   // 凭据失效时的强制登出（不弹确认）
+  // 注意：保留 babyTaskGame_v3，让用户能在迁移到新后端时通过"重新注册 + 上传现有数据"恢复进度
+  // 真正想清空数据时用 logout()（手动登出）
   _forceLogout() {
     localStorage.removeItem('kids_hero_auth_v1');
-    localStorage.removeItem('babyTaskGame_v3');
     this._authUser = null;
     BGM.stop();
     setTimeout(() => location.reload(), 300);
