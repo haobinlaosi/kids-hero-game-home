@@ -133,6 +133,12 @@ init():
 
 云同步返回 `INVALID`/`NOT_FOUND` → alert → `_forceLogout()` → 清本地 + reload。
 
+### 网络诊断（v26+）
+
+`Auth._post` 用 `AbortController` 加 10 秒超时 + 1 次重试，避免在屏蔽 workers.dev 的网络上"一直转圈"。失败时抛 `AuthError(code, phase, raw)`，phase 取 `network`/`timeout`/`parse`/`server`。
+
+登录页底部有"🔍 网络诊断"链接，调 `app.runDiagnostics()`：依次跑 Cloudflare DNS-over-HTTPS、`/auth/hint` 探针、`crypto.subtle.digest` 检查，结果显示在 `#diag-modal`，可一键复制。出现网络/超时错误时错误区会自动出现"网络诊断"按钮。
+
 ### 三层防御保留
 
 - `saveData()` 未登录直接 return（首屏最强防线）

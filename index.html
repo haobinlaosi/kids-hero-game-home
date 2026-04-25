@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <link rel="manifest" href="manifest.json">
   <title>宝贝任务乐园</title>
-  <link rel="stylesheet" href="style.css?v=25">
+  <link rel="stylesheet" href="style.css?v=26">
 </head>
 <body>
 
@@ -29,6 +29,21 @@
         <button class="auth-tab" data-tab="reset" onclick="app.switchAuthTab('reset')">忘记密码</button>
       </div>
       <div class="auth-form" id="auth-form"></div>
+      <div class="auth-footer">
+        <a class="auth-diag-link" onclick="app.runDiagnostics()">&#128269; 注册/登录有问题？点这里网络诊断</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 网络诊断弹窗 ========== -->
+  <div id="diag-modal" class="modal">
+    <div class="modal-content modal-diag">
+      <h3>&#128269; 网络诊断</h3>
+      <div class="diag-body" id="diag-body"></div>
+      <div class="diag-actions">
+        <button class="btn btn-cancel" onclick="app.closeDiag()">关闭</button>
+        <button class="btn btn-confirm" id="diag-copy">&#128203; 复制结果</button>
+      </div>
     </div>
   </div>
 
@@ -243,6 +258,6 @@
 
   <div id="celebration" class="celebration"></div>
   <button id="mute-btn" class="mute-btn" onclick="app.toggleMute()" title="背景音乐开关">🔊</button>
-  <script src="app.js?v=25"></script>
+  <script src="app.js?v=26"></script>
 </body>
 </html>

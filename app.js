@@ -700,6 +700,17 @@ const BGM = {
 };
 
 // ============ 用户认证 ============
+
+// 结构化认证错误：phase 取值 'network' | 'timeout' | 'parse' | 'server'
+class AuthError extends Error {
+  constructor(code, phase, raw) {
+    super(code);
+    this.code = code;
+    this.phase = phase;
+    this.raw = raw || '';
+  }
+}
+
 const Auth = {
   // 客户端哈希：sha256(username + ':' + value)，用户名作为盐
   async hash(salt, value) {
@@ -708,17 +719,50 @@ const Auth = {
     return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2, '0')).join('');
   },
 
+  // 带 10 秒超时 + 1 次自动重试的 fetch
+  // 失败时抛 AuthError({code, phase, raw})，由调用方分类展示
   async _post(path, body) {
-    const res = await fetch(SYNC_URL + path, {
+    const url = SYNC_URL + path;
+    const opts = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Auth-Token': SYNC_TOKEN },
       body: JSON.stringify(body)
-    });
-    let json;
-    try { json = await res.json(); }
-    catch (e) { throw new Error('NETWORK'); }
-    if (!json || !json.ok) throw new Error((json && json.error) || 'UNKNOWN');
-    return json;
+    };
+
+    const attempt = async () => {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 10000);
+      try {
+        const res = await fetch(url, { ...opts, signal: ctrl.signal });
+        clearTimeout(timer);
+        let json;
+        try { json = await res.json(); }
+        catch (e) { throw new AuthError('PARSE', 'parse', String(e && e.message || e)); }
+        if (!json || !json.ok) {
+          throw new AuthError(json && json.error || 'UNKNOWN', 'server', json && json.message || '');
+        }
+        return json;
+      } catch (e) {
+        clearTimeout(timer);
+        if (e instanceof AuthError) throw e;
+        // AbortError -> timeout；其他 TypeError 等都视为 network 层
+        if (e && e.name === 'AbortError') {
+          throw new AuthError('TIMEOUT', 'timeout', '10s 内未收到响应');
+        }
+        throw new AuthError('NETWORK_FAIL', 'network', String(e && e.message || e));
+      }
+    };
+
+    try {
+      return await attempt();
+    } catch (e) {
+      // 仅网络层 / 超时层失败时重试一次（服务端错误 / parse 错误不重试）
+      if (e instanceof AuthError && (e.phase === 'network' || e.phase === 'timeout')) {
+        await new Promise(r => setTimeout(r, 1000));
+        return await attempt();
+      }
+      throw e;
+    }
   },
 
   async register({ username, password, hint, hintAnswer, data }) {
@@ -754,7 +798,9 @@ const AUTH_ERR_MSG = {
   WRONG_ANSWER: '答案错误',
   BAD_USERNAME: '用户名格式错误（3-20 字符，中英文/数字/下划线）',
   MISSING: '请填写完整',
-  NETWORK: '网络错误，请重试',
+  NETWORK_FAIL: '🔌 连接服务器失败 — 你这台手机的网络可能屏蔽了同步服务器。请尝试：① 换 4G/5G 流量 ② 换其他 Wi-Fi ③ 在 Safari（不是微信）里打开。仍然不行请点下方的「网络诊断」截图反馈',
+  TIMEOUT: '⏱️ 请求超时（10秒）— 你这台手机连不上服务器。请试试别的网络，或点下方「网络诊断」查看详情',
+  PARSE: '服务端返回异常，请点「网络诊断」查看详情',
   DEPRECATED: '服务端已升级，请刷新页面',
   FORBIDDEN: '访问被拒绝',
   UNKNOWN: '未知错误'
@@ -1243,15 +1289,36 @@ const app = {
     }
   },
 
-  _showAuthError(id, code) {
+  _showAuthError(id, codeOrErr) {
     const el = document.getElementById(id);
     if (!el) return;
-    el.textContent = AUTH_ERR_MSG[code] || ('出错了: ' + code);
+    let code, raw, phase;
+    if (codeOrErr instanceof AuthError) {
+      code = codeOrErr.code; raw = codeOrErr.raw; phase = codeOrErr.phase;
+    } else {
+      code = String(codeOrErr); raw = ''; phase = '';
+    }
+    const msg = AUTH_ERR_MSG[code] || ('出错了: ' + code);
+    const isNetwork = (phase === 'network' || phase === 'timeout');
+    const detailHtml = (raw || phase) ? `
+      <details class="auth-error-detail">
+        <summary>查看详情</summary>
+        <div>错误码: ${code}${phase ? '（' + phase + '）' : ''}</div>
+        ${raw ? `<div>原因: ${this._escapeHtml(raw)}</div>` : ''}
+        <div>时间: ${new Date().toLocaleString()}</div>
+        <div>UA: ${this._escapeHtml(navigator.userAgent)}</div>
+      </details>` : '';
+    const diagBtn = isNetwork ? `<button class="auth-error-diag" onclick="app.runDiagnostics()">🔍 网络诊断</button>` : '';
+    el.innerHTML = `<div class="auth-error-msg">${msg}</div>${diagBtn}${detailHtml}`;
+  },
+
+  _escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   },
 
   _clearAuthError(id) {
     const el = document.getElementById(id);
-    if (el) el.textContent = '';
+    if (el) el.innerHTML = '';
   },
 
   _validateUsername(u) {
@@ -1289,7 +1356,7 @@ const app = {
       this.updateMuteButton();
       this._updateLogoutBtn();
     } catch (e) {
-      this._showAuthError('auth-login-error', e.message);
+      this._showAuthError('auth-login-error', e instanceof AuthError ? e : (e && e.message));
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = '登录'; }
     }
@@ -1345,7 +1412,7 @@ const app = {
       this.updateMuteButton();
       this._updateLogoutBtn();
     } catch (e) {
-      this._showAuthError('auth-register-error', e.message);
+      this._showAuthError('auth-register-error', e instanceof AuthError ? e : (e && e.message));
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = '注册'; }
     }
@@ -1363,7 +1430,7 @@ const app = {
       const hint = await Auth.fetchHint({ username });
       if (hintEl) hintEl.textContent = '提示：' + hint;
     } catch (e) {
-      this._showAuthError('auth-reset-error', e.message);
+      this._showAuthError('auth-reset-error', e instanceof AuthError ? e : (e && e.message));
     }
   },
 
@@ -1402,7 +1469,7 @@ const app = {
       this.updateMuteButton();
       this._updateLogoutBtn();
     } catch (e) {
-      this._showAuthError('auth-reset-error', e.message);
+      this._showAuthError('auth-reset-error', e instanceof AuthError ? e : (e && e.message));
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = '重置密码并登录'; }
     }
@@ -1415,6 +1482,116 @@ const app = {
     this._authUser = null;
     BGM.stop();
     location.reload();
+  },
+
+  // ---- 网络诊断 ----
+  // 依次跑几个 probe，定位"Load failed"到底是什么层失败
+  async runDiagnostics() {
+    const modal = document.getElementById('diag-modal');
+    const body = document.getElementById('diag-body');
+    if (!modal || !body) return;
+    modal.classList.add('show');
+
+    const ua = navigator.userAgent;
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const connInfo = conn ? `${conn.effectiveType || '?'} (downlink: ${conn.downlink || '?'} Mbps)` : '未知';
+    const ts = new Date().toLocaleString();
+
+    const probes = [
+      {
+        name: '基础网络（Cloudflare DNS over HTTPS）',
+        url: 'https://cloudflare-dns.com/dns-query?name=cloudflare.com&type=A',
+        opts: { headers: { 'accept': 'application/dns-json' } }
+      },
+      {
+        name: 'Worker 域名是否可达（kids-hero-sync.yiyuluzhb.workers.dev）',
+        url: SYNC_URL + '/auth/hint',
+        opts: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Auth-Token': SYNC_TOKEN },
+          body: JSON.stringify({ username: '__diag_probe__' })
+        }
+      }
+    ];
+
+    body.innerHTML = `
+      <div class="diag-row">⏳ 检测中…</div>
+      <div class="diag-meta">设备: ${this._escapeHtml(ua)}</div>
+      <div class="diag-meta">网络类型: ${this._escapeHtml(connInfo)}</div>
+      <div class="diag-meta">时间: ${ts}</div>
+    `;
+
+    const results = [];
+    let cryptoOk = false;
+    try {
+      await crypto.subtle.digest('SHA-256', new TextEncoder().encode('test'));
+      cryptoOk = true;
+    } catch(e) {}
+    results.push({
+      name: '浏览器加密 API（crypto.subtle）',
+      ok: cryptoOk,
+      detail: cryptoOk ? '可用' : '不可用 — 此设备可能 iOS 太老或为隐私模式'
+    });
+
+    for (const p of probes) {
+      const t0 = Date.now();
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 8000);
+      try {
+        const res = await fetch(p.url, { ...p.opts, signal: ctrl.signal });
+        clearTimeout(timer);
+        const ms = Date.now() - t0;
+        results.push({
+          name: p.name,
+          ok: true,
+          detail: `HTTP ${res.status}，耗时 ${ms} ms`
+        });
+      } catch (e) {
+        clearTimeout(timer);
+        const ms = Date.now() - t0;
+        const reason = e && e.name === 'AbortError' ? '8 秒超时' : (e && e.message || e);
+        results.push({
+          name: p.name,
+          ok: false,
+          detail: `失败（${ms} ms）: ${reason}`
+        });
+      }
+    }
+
+    const rowsHtml = results.map(r => `
+      <div class="diag-row ${r.ok ? 'diag-ok' : 'diag-fail'}">
+        <div class="diag-name">${r.ok ? '✅' : '❌'} ${this._escapeHtml(r.name)}</div>
+        <div class="diag-detail">${this._escapeHtml(r.detail)}</div>
+      </div>`).join('');
+
+    body.innerHTML = `
+      ${rowsHtml}
+      <div class="diag-meta">设备: ${this._escapeHtml(ua)}</div>
+      <div class="diag-meta">网络类型: ${this._escapeHtml(connInfo)}</div>
+      <div class="diag-meta">时间: ${ts}</div>
+    `;
+
+    // 给"复制结果"按钮挂载文本
+    const copyBtn = document.getElementById('diag-copy');
+    if (copyBtn) {
+      const summary = results.map(r => `${r.ok ? '[OK]' : '[FAIL]'} ${r.name}: ${r.detail}`).join('\n');
+      const fullText = `=== 网络诊断 ===\n时间: ${ts}\n设备: ${ua}\n网络: ${connInfo}\n\n${summary}`;
+      copyBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(fullText);
+          copyBtn.textContent = '✓ 已复制';
+          setTimeout(() => { copyBtn.textContent = '📋 复制结果'; }, 2000);
+        } catch (e) {
+          // clipboard API 在不安全上下文不可用，回退到 prompt
+          prompt('请手动复制下面的诊断结果：', fullText);
+        }
+      };
+    }
+  },
+
+  closeDiag() {
+    const modal = document.getElementById('diag-modal');
+    if (modal) modal.classList.remove('show');
   },
 
   // ---- 页面导航 ----
