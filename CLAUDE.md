@@ -11,7 +11,7 @@
 - 纯静态 HTML + CSS + JavaScript（无框架、无构建步骤）
 - 通过 GitHub Pages 部署：https://haobinlaosi.github.io/kids-hero-game-home/
 - 数据存储在 `localStorage`：游戏数据 `babyTaskGame_v3`、登录态 `kids_hero_auth_v1`
-- 云同步通过 Cloudflare Worker + KV（按用户名分 key，详见"用户注册登录"章节）
+- 云同步：**阿里云 Function Compute + OSS**（v27 起，从 Cloudflare 迁过来，详见"用户注册登录"章节）
 - 支持 PWA（manifest.json + Service Worker 网络优先缓存）
 
 ## 部署方式
@@ -48,7 +48,7 @@ node bump-version.js 25       # 设为指定版本
 2. **`renderPixelPet()`** — 根据像素网格定义生成 SVG
 3. **`SFX` 音效引擎** — Web Audio 合成，含 7 种基础音效 + 11 种宠物叫声 + `bossVictory`
 4. **`BGM` 背景音乐引擎** — HTML `<audio>` 单例，循环播放 MP3
-5. **`Auth` 用户认证模块** — SHA-256 客户端哈希 + Worker `/auth/*` 端点调用
+5. **`Auth` 用户认证模块** — SHA-256 客户端哈希 + 后端 `/auth/*` 端点调用（10 秒 fetch 超时 + 1 次重试 + 结构化 `AuthError`）
 6. **`app` 对象** — 所有游戏逻辑，按功能模块组织：
    - 初始化（Service Worker 注册、检查登录态、自动跳转 auth/home）
    - 用户认证（登录/注册/忘记密码/登出/数据迁移）
@@ -59,7 +59,7 @@ node bump-version.js 25       # 设为指定版本
    - 小屋系统（房间渲染、宠物漫游定时器、普通战利品墙 + BOSS 战利品墙）
    - 商店系统（购买流程、6 种商品分类，含音乐播放/停止切换）
    - 宠物培养（属性：饥饿/清洁/快乐，三种喂食：喂肉/喂菜/喂饭，每种独立每日免费 1 次）
-   - 战斗系统（3 种攻击方式 + 宠物辅助攻击 + BOSS 机制：每 5 只小怪出 1 个 BOSS）
+   - 战斗系统（3 种攻击方式 + 宠物辅助攻击 + BOSS 机制：每只小怪 25% 随机触发 + 3 天限时 + 专属装饰奖励）
    - 音乐控制（购买、播放、静音按钮）
    - GIF 播放、庆祝特效、宠物叫声
 
@@ -68,7 +68,7 @@ node bump-version.js 25       # 设为指定版本
 - 两个角色共享积分，但各自拥有独立的小屋、宠物和宠物状态
 - 音乐购买状态是**全局**的（不分角色），存在 `this.data.music = { owned, current, enabled }`
 - 宠物属性在应用加载时根据距上次更新的天数进行衰减
-- 云同步（`_syncToCloud`/`_loadFromCloud`）通过 Cloudflare Worker + KV 存储，按用户名分 key
+- 云同步（`_syncToCloud`/`_loadFromCloud`）通过阿里云 FC + OSS 存储，按用户名分 key
 
 ### 关键约定
 - HTML 通过 JS 模板字符串生成，用 `.innerHTML` 注入
@@ -97,9 +97,20 @@ hintAnswerHash = sha256(username + ':' + hintAnswer.trim().toLowerCase())
 
 **明文密码/答案从不发送到 Worker**。Worker 只比较哈希。`X-Auth-Token: hero2026safe` 仍作为 App 级防刷门卫（第一道鉴权）。
 
-### Cloudflare Worker 端点
+### 同步后端：阿里云 FC + OSS（v27 起）
 
-基础 URL：`https://kids-hero-sync.yiyuluzhb.workers.dev`；KV 绑定 `GAME_DATA`；Secret `AUTH_TOKEN=hero2026safe`；源码在本仓库 `worker.js`（需手动粘贴到 Cloudflare Dashboard 部署）。
+**基础 URL**：`https://kids-hero-sync-hvwpmkqqqp.cn-shenzhen.fcapp.run`（在 [app.js](app.js) 的 `SYNC_URL` 常量里）
+
+**为什么不用 Cloudflare**：v25-v26 后端用的是 Cloudflare Workers (`*.workers.dev`)，但中国大陆部分 ISP 网络对该域名做 DNS 污染/TCP 重置导致不可达。诊断显示连 `cloudflare-dns.com` 都连不上，整个 Cloudflare 边缘 IP 段被屏蔽，自定义域名也救不了。v27 整体迁阿里云。
+
+**资源配置**（账号 5158\*\*\*\*\*@qq.com）：
+- 区域：**华南1（深圳）`cn-shenzhen`**（FC 不支持华南3 广州）
+- FC 函数：`kids-hero-sync`，类型"事件函数"+ HTTP 触发器，认证"无需认证"
+- OSS Bucket：`kids-hero-data-sz`（私有），key 格式 `users/<username>.json`
+- RAM 用户：`kids-hero-fc`，绑 `AliyunOSSFullAccess`
+- 环境变量：`AUTH_TOKEN` / `OSS_BUCKET` / `OSS_REGION=oss-cn-shenzhen` / `OSS_ACCESS_KEY` / `OSS_SECRET_KEY`
+- 源码：本仓库 [aliyun-fc/index.js](aliyun-fc/index.js) + [aliyun-fc/package.json](aliyun-fc/package.json)（需手动粘贴到 FC 控制台 WebIDE 部署，详见 [DEPLOY-ALIYUN.md](DEPLOY-ALIYUN.md)）
+- 旧 Cloudflare worker（[worker.js](worker.js)）保留作冷备份，客户端不再调用
 
 | 方法 | 路径 | 用途 |
 |---|---|---|
@@ -110,9 +121,14 @@ hintAnswerHash = sha256(username + ':' + hintAnswer.trim().toLowerCase())
 | POST | `/data/load` | 加载当前用户的云端数据 |
 | POST | `/data/save` | 保存当前用户的数据到云端 |
 
-KV key 格式：`user:<username>` → `{ passwordHash, hint, hintAnswerHash, data, _lastSync, createdAt }`。
+OSS 记录格式：`users/<username>.json` → `{ passwordHash, hint, hintAnswerHash, data, _lastSync, createdAt }`。
 
-旧根路径 `/` 返回 410 Gone（v24 及以前的客户端会被拦住，不会污染数据）。
+旧根路径 `/` 返回 410 Gone（v24 及以前的客户端会被拦住）。
+
+#### FC 关键陷阱
+
+- "事件函数"的 handler 签名是 `(event, context)`，event 是 API Gateway 风格 JSON（含 `requestContext.http.method/path`、`headers`、`body`），**不是** Express 风格的 `(req, res, ctx)`。错误的签名导致 502 + 日志显示 `method=undefined`
+- 返回值用 `{statusCode, headers, body, isBase64Encoded}` 对象
 
 ### 启动流程
 
@@ -131,13 +147,17 @@ init():
 
 ### 凭据失效处理
 
-云同步返回 `INVALID`/`NOT_FOUND` → alert → `_forceLogout()` → 清本地 + reload。
+云同步返回 `INVALID`/`NOT_FOUND` → alert → `_forceLogout()` → 清 `kids_hero_auth_v1` + reload。
+
+⚠️ **`_forceLogout()` 不再清 `babyTaskGame_v3`**（v27 起）。这样后端切换或密码失效时，本地游戏数据保留，用户可以通过"重新注册 + 上传现有数据"无缝迁移。手动 `logout()` 还是会清两份。
 
 ### 网络诊断（v26+）
 
-`Auth._post` 用 `AbortController` 加 10 秒超时 + 1 次重试，避免在屏蔽 workers.dev 的网络上"一直转圈"。失败时抛 `AuthError(code, phase, raw)`，phase 取 `network`/`timeout`/`parse`/`server`。
+`Auth._post` 用 `AbortController` 加 10 秒超时 + 1 次重试，避免在网络屏蔽时"一直转圈"。失败时抛 `AuthError(code, phase, raw)`，phase 取 `network`/`timeout`/`parse`/`server`。
 
-登录页底部有"🔍 网络诊断"链接，调 `app.runDiagnostics()`：依次跑 Cloudflare DNS-over-HTTPS、`/auth/hint` 探针、`crypto.subtle.digest` 检查，结果显示在 `#diag-modal`，可一键复制。出现网络/超时错误时错误区会自动出现"网络诊断"按钮。
+登录页底部有"🔍 网络诊断"链接，调 `app.runDiagnostics()`：依次跑 Cloudflare DNS-over-HTTPS、后端 `/auth/hint` 探针、`crypto.subtle.digest` 检查，结果显示在 `#diag-modal`，可一键复制。出现网络/超时错误时错误区会自动出现"网络诊断"按钮。
+
+> 历史记录：v26 上线诊断工具后立刻定位到外甥手机的 workers.dev 不可达，进而推动 v27 迁阿里云。诊断现在仍保留（同样的代码也能验证阿里云 fcapp.run 的可达性），未来如果阿里云出问题第一时间能用得上。
 
 ### 三层防御保留
 
@@ -167,16 +187,20 @@ init():
 
 ## 文件结构
 ```
-├── index.html          # SPA 主页（7 个页面 + 多个弹窗）
-├── app.js              # 所有游戏逻辑（约 2400 行，含 Auth 模块）
-├── style.css           # 所有样式
-├── sw.js               # Service Worker（网络优先缓存）
-├── worker.js           # Cloudflare Worker 源码（手动粘贴到 Dashboard 部署）
-├── manifest.json       # PWA 配置
-├── bump-version.js     # 版本号自动 bump 脚本
-├── music/              # 背景音乐 MP3（5 首公版）
-├── gifs/               # 宠物 GIF 动画（11 个文件）
-├── icons/              # 角色图片（leidi.png、dijia.png、icon.svg）
+├── index.html              # SPA 主页（7 个页面 + 多个弹窗）
+├── app.js                  # 所有游戏逻辑（约 2800 行，含 Auth 模块、诊断、BOSS 系统）
+├── style.css               # 所有样式（约 1300 行）
+├── sw.js                   # Service Worker（网络优先缓存）
+├── manifest.json           # PWA 配置
+├── bump-version.js         # 版本号自动 bump 脚本
+├── aliyun-fc/
+│   ├── index.js            # 阿里云 FC 函数源码（当前后端，手动粘到 Dashboard）
+│   └── package.json        # ali-oss 依赖声明
+├── worker.js               # 旧 Cloudflare Worker 源码（已停用，保留作冷备份）
+├── DEPLOY-ALIYUN.md        # 阿里云部署详细步骤
+├── music/                  # 背景音乐 MP3（5 首公版）
+├── gifs/                   # 宠物 GIF 动画（11 个文件）
+├── icons/                  # 角色图片（leidi.png、dijia.png、icon.svg）
 └── .github/workflows/deploy.yml
 ```
 
@@ -215,8 +239,10 @@ init():
 ## 注意事项
 
 - 代码修改后发布前务必运行 `node bump-version.js` bump 版本号
-- 改 `worker.js` 后需手动粘贴到 Cloudflare Dashboard 才生效（未自动部署）
+- 改 `aliyun-fc/index.js` 或 `package.json` 后需手动粘贴到阿里云 FC 控制台 WebIDE 部署（未自动部署，详见 [DEPLOY-ALIYUN.md](DEPLOY-ALIYUN.md)）
 - 添加新的数据字段时，务必在 `_applyDataCompat()` 中加入向后兼容初始化
 - 新增宠物时，除了 `SHOP_ITEMS.pet` 中添加条目，还需：
   1. 在 `PIXEL_PETS` 中定义像素艺术（可选，目前 p_whale/p_shark 未定义但仍可用 emoji 显示）
   2. 添加 `voice` 字段并在 `SFX.play()` 的 switch 中新增对应叫声 case
+- 新增 BOSS 时，除了 `BOSSES` 中加条目，还需在 `SHOP_ITEMS` 对应分类（furniture/wallDecor/special）末尾加 `{ ..., bossOnly: true }` 的奖励物品条目，否则 `findItem` 找不到，小屋渲染会失败
+- **网络可达性的 VPN 假象**：用户自己常开 VPN 但不自知，会让外部域名"看起来一直工作"，但其他家人/孩子的设备没 VPN 就会失败。任何外部依赖（fetch、CDN、字体）选型时优先国内可达的服务（阿里云/腾讯云）。fetch 必须有 timeout（10 秒），错误信息要给出可操作建议
