@@ -40,104 +40,163 @@ const TASKS = [
   { id: 'hit',           name: '打人',           icon: '🚫', points: -10, category: 'penalty' }
 ];
 
+// 房间定义（v30 多房间英雄家园）
+const ROOMS = {
+  bedroom:  { name: '卧室',   icon: '🛏️', unlockPrice: 0    },
+  living:   { name: '客厅',   icon: '📺', unlockPrice: 300  },
+  petRoom:  { name: '宠物房', icon: '🐾', unlockPrice: 500  },
+  garden:   { name: '花园',   icon: '🌷', unlockPrice: 800  },
+  training: { name: '勇者馆', icon: '🛡️', unlockPrice: 1000 },
+  attic:    { name: '阁楼',   icon: '🏠', unlockPrice: 1500 }
+};
+const ROOM_ORDER = ['bedroom', 'living', 'petRoom', 'garden', 'training', 'attic'];
+
+// 商店分类（v30 起按房间分类 + 扩建/主题/宠物/音乐/心愿）
+// 每件装饰商品带 type 字段决定数据落位与渲染方式：
+//   - furniture / wallDecor / special  → rooms[item.room].items
+//   - floor                            → houses[charId].floorOwnedGlobal + rooms[targetRoom].floor.current
+//   - expand                           → 解锁房间 unlockRoom
+//   - pet / music                      → 现有逻辑不变
 const SHOP_ITEMS = {
-  furniture: {
-    label: '家具', icon: '🛋️', zone: 'floor',
+  expand: {
+    label: '扩建', icon: '🏠',
     items: [
-      { id: 'f_sofa', name: '小沙发', icon: '🛋️', price: 70, pos: { left:'3%', bottom:'32%', size:'34px' } },
-      { id: 'f_table', name: '小桌子', icon: '🪑', price: 50, pos: { left:'25%', bottom:'28%', size:'28px' } },
-      { id: 'f_bed', name: '小床', icon: '🛏️', price: 90, pos: { right:'3%', bottom:'35%', size:'34px' } },
-      { id: 'f_shelf', name: '书架', icon: '📚', price: 70, pos: { right:'5%', bottom:'65%', size:'28px' } },
-      { id: 'f_tv', name: '电视', icon: '📺', price: 110, pos: { left:'42%', bottom:'68%', size:'30px' } },
-      { id: 'f_lamp', name: '台灯', icon: '💡', price: 50, pos: { left:'2%', bottom:'58%', size:'24px' } },
-      { id: 'f_bath', name: '浴缸', icon: '🛁', price: 110, pos: { right:'25%', bottom:'5%', size:'30px' } },
-      { id: 'f_piano', name: '钢琴', icon: '🎹', price: 140, pos: { left:'12%', bottom:'5%', size:'32px' } },
-      { id: 'f_computer', name: '电脑', icon: '💻', price: 90, pos: { right:'18%', bottom:'55%', size:'26px' } },
-      { id: 'f_fridge', name: '冰箱', icon: '🧊', price: 70, pos: { right:'2%', bottom:'55%', size:'28px' } },
-      // BOSS 专属奖励（不在商店出售，bossOnly）
-      { id: 'br_b1', name: '火焰王座', icon: '🔥', price: 0, bossOnly: true, pos: { left:'38%', bottom:'25%', size:'40px' } },
-      { id: 'br_b2', name: '冰雕熊',   icon: '🐻‍❄️', price: 0, bossOnly: true, pos: { right:'35%', bottom:'30%', size:'40px' } }
+      { id: 'room_living',   name: '建造客厅',   icon: '🛋️', price: 300,  type: 'expand', unlockRoom: 'living' },
+      { id: 'room_petRoom',  name: '建造宠物房', icon: '🐾', price: 500,  type: 'expand', unlockRoom: 'petRoom' },
+      { id: 'room_garden',   name: '建造花园',   icon: '🌷', price: 800,  type: 'expand', unlockRoom: 'garden' },
+      { id: 'room_training', name: '建造勇者馆', icon: '🛡️', price: 1000, type: 'expand', unlockRoom: 'training' },
+      { id: 'room_attic',    name: '建造阁楼',   icon: '🏠', price: 1500, type: 'expand', unlockRoom: 'attic' }
     ]
   },
-  wallDecor: {
-    label: '墙饰', icon: '🖼️', zone: 'wall',
+  bedroom: {
+    label: '卧室', icon: '🛏️',
     items: [
-      { id: 'w_paint', name: '挂画', icon: '🖼️', price: 40, pos: { left:'5%', top:'12%', size:'28px' } },
-      { id: 'w_clock', name: '时钟', icon: '🕐', price: 50, pos: { left:'22%', top:'8%', size:'24px' } },
-      { id: 'w_photo', name: '照片墙', icon: '📷', price: 50, pos: { right:'22%', top:'10%', size:'24px' } },
-      { id: 'w_cert', name: '奖状', icon: '📜', price: 70, pos: { left:'38%', top:'5%', size:'24px' } },
-      { id: 'w_mirror', name: '镜子', icon: '🪞', price: 50, pos: { right:'5%', top:'12%', size:'26px' } },
-      { id: 'w_flag', name: '小旗帜', icon: '🚩', price: 40, pos: { left:'5%', top:'55%', size:'22px' } },
-      { id: 'w_map', name: '世界地图', icon: '🗺️', price: 70, pos: { right:'5%', top:'50%', size:'26px' } },
-      { id: 'w_note', name: '音符墙', icon: '🎵', price: 50, pos: { left:'22%', top:'50%', size:'22px' } },
-      { id: 'w_heart', name: '爱心墙', icon: '❤️', price: 40, pos: { right:'22%', top:'48%', size:'24px' } },
-      { id: 'w_star', name: '星星灯', icon: '🌟', price: 70, pos: { left:'55%', top:'5%', size:'24px' } },
-      // BOSS 专属奖励（不在商店出售，bossOnly）
-      { id: 'br_b3', name: '龙鳞盾', icon: '🛡️', price: 0, bossOnly: true, pos: { left:'40%', top:'30%', size:'34px' } },
-      { id: 'br_b4', name: '雷神锤', icon: '🔨', price: 0, bossOnly: true, pos: { right:'40%', top:'30%', size:'34px' } }
+      // furniture
+      { id: 'f_bed',   name: '小床',   icon: '🛏️', price: 90,  type: 'furniture', room: 'bedroom', pos: { right:'3%',  bottom:'35%', size:'34px' } },
+      { id: 'f_sofa',  name: '小沙发', icon: '🛋️', price: 70,  type: 'furniture', room: 'bedroom', pos: { left:'3%',   bottom:'32%', size:'34px' } },
+      { id: 'f_table', name: '小桌子', icon: '🪑', price: 50,  type: 'furniture', room: 'bedroom', pos: { left:'25%',  bottom:'28%', size:'28px' } },
+      { id: 'f_lamp',  name: '台灯',   icon: '💡', price: 50,  type: 'furniture', room: 'bedroom', pos: { left:'2%',   bottom:'58%', size:'24px' } },
+      { id: 'f_bath',  name: '浴缸',   icon: '🛁', price: 110, type: 'furniture', room: 'bedroom', pos: { right:'25%', bottom:'5%',  size:'30px' } },
+      // wallDecor
+      { id: 'w_paint',  name: '挂画',   icon: '🖼️', price: 40, type: 'wallDecor', room: 'bedroom', pos: { left:'5%',   top:'12%', size:'28px' } },
+      { id: 'w_clock',  name: '时钟',   icon: '🕐', price: 50, type: 'wallDecor', room: 'bedroom', pos: { left:'22%',  top:'8%',  size:'24px' } },
+      { id: 'w_mirror', name: '镜子',   icon: '🪞', price: 50, type: 'wallDecor', room: 'bedroom', pos: { right:'5%',  top:'12%', size:'26px' } },
+      { id: 'w_flag',   name: '小旗帜', icon: '🚩', price: 40, type: 'wallDecor', room: 'bedroom', pos: { left:'5%',   top:'55%', size:'22px' } },
+      { id: 'w_heart',  name: '爱心墙', icon: '❤️', price: 40, type: 'wallDecor', room: 'bedroom', pos: { right:'22%', top:'48%', size:'24px' } },
+      { id: 'w_star',   name: '星星灯', icon: '🌟', price: 70, type: 'wallDecor', room: 'bedroom', pos: { left:'55%',  top:'5%',  size:'24px' } }
     ]
   },
-  floor: {
-    label: '地板墙纸', icon: '🎨', zone: 'bg',
+  living: {
+    label: '客厅', icon: '📺',
     items: [
-      { id: 'fl_star', name: '星空', icon: '⭐', price: 130, wallBg: '#1a1a3e', floorBg: '#0c0c2e' },
-      { id: 'fl_rainbow', name: '彩虹', icon: '🌈', price: 160, wallBg: '#ffe0ec', floorBg: '#ffd0d0' },
-      { id: 'fl_grass', name: '草地', icon: '🌿', price: 120, wallBg: '#c8e6c9', floorBg: '#4CAF50' },
-      { id: 'fl_ocean', name: '海洋', icon: '🌊', price: 160, wallBg: '#b3e5fc', floorBg: '#0288d1' },
-      { id: 'fl_cloud', name: '云朵天空', icon: '☁️', price: 130, wallBg: '#e3f2fd', floorBg: '#bbdefb' },
-      { id: 'fl_sunset', name: '晚霞', icon: '🌅', price: 160, wallBg: '#ff8a65', floorBg: '#d84315' },
-      { id: 'fl_candy', name: '糖果屋', icon: '🍬', price: 130, wallBg: '#f8bbd0', floorBg: '#f48fb1' },
-      { id: 'fl_space', name: '太空', icon: '🪐', price: 200, wallBg: '#1a0033', floorBg: '#0d001a' }
+      // furniture
+      { id: 'f_tv',       name: '电视', icon: '📺', price: 110, type: 'furniture', room: 'living', pos: { left:'42%',  bottom:'68%', size:'30px' } },
+      { id: 'f_piano',    name: '钢琴', icon: '🎹', price: 140, type: 'furniture', room: 'living', pos: { left:'12%',  bottom:'5%',  size:'32px' } },
+      { id: 'f_shelf',    name: '书架', icon: '📚', price: 70,  type: 'furniture', room: 'living', pos: { right:'5%',  bottom:'65%', size:'28px' } },
+      { id: 'f_computer', name: '电脑', icon: '💻', price: 130, type: 'furniture', room: 'living', pos: { right:'18%', bottom:'55%', size:'26px' } },
+      { id: 'f_fridge',   name: '冰箱', icon: '🧊', price: 70,  type: 'furniture', room: 'living', pos: { right:'2%',  bottom:'55%', size:'28px' } },
+      // wallDecor
+      { id: 'w_photo', name: '照片墙',   icon: '📷', price: 50, type: 'wallDecor', room: 'living', pos: { right:'22%', top:'10%', size:'24px' } },
+      { id: 'w_cert',  name: '奖状',     icon: '📜', price: 70, type: 'wallDecor', room: 'living', pos: { left:'38%',  top:'5%',  size:'24px' } },
+      { id: 'w_map',   name: '世界地图', icon: '🗺️', price: 90, type: 'wallDecor', room: 'living', pos: { right:'5%',  top:'50%', size:'26px' } },
+      { id: 'w_note',  name: '音符墙',   icon: '🎵', price: 70, type: 'wallDecor', room: 'living', pos: { left:'22%',  top:'50%', size:'22px' } }
     ]
   },
-  special: {
-    label: '特殊装饰', icon: '✨', zone: 'special',
+  petRoom: {
+    label: '宠物房', icon: '🐾',
     items: [
-      { id: 's_tree', name: '圣诞树', icon: '🎄', price: 200, pos: { right:'3%', bottom:'8%', size:'36px' } },
-      { id: 's_balloon', name: '气球', icon: '🎈', price: 160, pos: { left:'8%', top:'5%', size:'30px' } },
-      { id: 's_lights', name: '彩灯', icon: '🎆', price: 180, pos: { left:'50%', top:'2%', size:'28px' } },
-      { id: 's_fountain', name: '喷泉', icon: '⛲', price: 240, pos: { left:'42%', bottom:'3%', size:'32px' } },
-      { id: 's_flower', name: '花园', icon: '🌸', price: 160, pos: { left:'3%', bottom:'5%', size:'28px' } },
-      { id: 's_rocket', name: '火箭', icon: '🚀', price: 220, pos: { right:'8%', top:'3%', size:'30px' } },
-      { id: 's_rainbow', name: '彩虹桥', icon: '🌈', price: 200, pos: { left:'30%', top:'0%', size:'34px' } },
-      { id: 's_trophy', name: '奖杯', icon: '🏆', price: 180, pos: { right:'30%', bottom:'60%', size:'26px' } },
-      { id: 's_castle', name: '小城堡', icon: '🏰', price: 240, pos: { right:'3%', bottom:'55%', size:'34px' } },
-      { id: 's_ferris', name: '摩天轮', icon: '🎡', price: 220, pos: { left:'3%', bottom:'50%', size:'34px' } },
-      // BOSS 专属奖励（不在商店出售，bossOnly）
-      { id: 'br_b5', name: '黄金王冠', icon: '👑', price: 0, bossOnly: true, pos: { left:'45%', bottom:'25%', size:'40px' } }
+      { id: 'f_petbed',   name: '宠物窝', icon: '🐶', price: 80,  type: 'furniture', room: 'petRoom', pos: { left:'8%',   bottom:'15%', size:'34px' } },
+      { id: 'f_aquarium', name: '鱼缸',   icon: '🐠', price: 120, type: 'furniture', room: 'petRoom', pos: { right:'8%',  bottom:'40%', size:'32px' } },
+      { id: 'f_petbath',  name: '洗澡盆', icon: '🚿', price: 60,  type: 'furniture', room: 'petRoom', pos: { right:'25%', bottom:'10%', size:'28px' } },
+      { id: 'f_petbowl',  name: '饭盆',   icon: '🍖', price: 50,  type: 'furniture', room: 'petRoom', pos: { left:'40%',  bottom:'8%',  size:'26px' } },
+      { id: 'w_pettoy',   name: '玩具球', icon: '🎾', price: 40,  type: 'wallDecor', room: 'petRoom', pos: { left:'30%',  top:'55%', size:'24px' } },
+      { id: 'w_pawprint', name: '爪印墙', icon: '🐾', price: 50,  type: 'wallDecor', room: 'petRoom', pos: { right:'10%', top:'15%', size:'24px' } }
+    ]
+  },
+  garden: {
+    label: '花园', icon: '🌷',
+    items: [
+      { id: 's_flower',   name: '花丛',   icon: '🌸', price: 160, type: 'special', room: 'garden', pos: { left:'3%',   bottom:'5%',  size:'28px' } },
+      { id: 's_tree',     name: '圣诞树', icon: '🎄', price: 200, type: 'special', room: 'garden', pos: { right:'3%',  bottom:'8%',  size:'36px' } },
+      { id: 's_balloon',  name: '气球',   icon: '🎈', price: 160, type: 'special', room: 'garden', pos: { left:'8%',   top:'5%',     size:'30px' } },
+      { id: 's_lights',   name: '彩灯',   icon: '🎆', price: 180, type: 'special', room: 'garden', pos: { left:'50%',  top:'2%',     size:'28px' } },
+      { id: 's_fountain', name: '喷泉',   icon: '⛲', price: 240, type: 'special', room: 'garden', pos: { left:'42%',  bottom:'3%',  size:'32px' } },
+      { id: 's_rocket',   name: '火箭',   icon: '🚀', price: 220, type: 'special', room: 'garden', pos: { right:'8%',  top:'3%',     size:'30px' } },
+      { id: 's_rainbow',  name: '彩虹桥', icon: '🌈', price: 200, type: 'special', room: 'garden', pos: { left:'30%',  top:'0%',     size:'34px' } },
+      { id: 's_castle',   name: '小城堡', icon: '🏰', price: 240, type: 'special', room: 'garden', pos: { right:'3%',  bottom:'55%', size:'34px' } },
+      { id: 's_ferris',   name: '摩天轮', icon: '🎡', price: 220, type: 'special', room: 'garden', pos: { left:'3%',   bottom:'50%', size:'34px' } },
+      // 花园专属主题（type=floor, room='garden'）— 与花园装饰混排
+      { id: 'gt_grass',     name: '草地阳光', icon: '🌱', price: 90,  type: 'floor', room: 'garden', wallBg: 'linear-gradient(180deg,#a8e6ff 0%,#cdf0e0 100%)', floorBg: 'linear-gradient(180deg,#7BC97B,#4d9943)' },
+      { id: 'gt_beach',     name: '河边沙滩', icon: '🏖️', price: 120, type: 'floor', room: 'garden', wallBg: 'linear-gradient(180deg,#7ec5e8,#a8d8eb)',         floorBg: 'linear-gradient(180deg,#f4d8a0,#e5c889)' },
+      { id: 'gt_snow',      name: '雪地冬景', icon: '❄️', price: 140, type: 'floor', room: 'garden', wallBg: 'linear-gradient(180deg,#9ab2c4,#c4d4e0)',         floorBg: 'linear-gradient(180deg,#f0f6f8,#e0eaf0)' },
+      { id: 'gt_starnight', name: '星夜魔幻', icon: '🌠', price: 160, type: 'floor', room: 'garden', wallBg: 'linear-gradient(180deg,#1a0a3a,#3a1f6a)',         floorBg: 'linear-gradient(180deg,#4a2a7a,#2a1860)' }
+    ]
+  },
+  training: {
+    label: '勇者馆', icon: '🛡️',
+    items: [
+      { id: 's_trophy', name: '奖杯', icon: '🏆', price: 180, type: 'special', room: 'training', pos: { right:'30%', bottom:'60%', size:'26px' } },
+      // BOSS 专属奖励：bossOnly 在商店里被过滤；落位时仍按 room='training'
+      { id: 'br_b1', name: '火焰王座', icon: '🔥',   price: 0, bossOnly: true, type: 'furniture', room: 'training', pos: { left:'38%',  bottom:'25%', size:'40px' } },
+      { id: 'br_b2', name: '冰雕熊',   icon: '🐻‍❄️', price: 0, bossOnly: true, type: 'furniture', room: 'training', pos: { right:'35%', bottom:'30%', size:'40px' } },
+      { id: 'br_b3', name: '龙鳞盾',   icon: '🛡️',   price: 0, bossOnly: true, type: 'wallDecor', room: 'training', pos: { left:'40%',  top:'30%',    size:'34px' } },
+      { id: 'br_b4', name: '雷神锤',   icon: '🔨',   price: 0, bossOnly: true, type: 'wallDecor', room: 'training', pos: { right:'40%', top:'30%',    size:'34px' } },
+      { id: 'br_b5', name: '黄金王冠', icon: '👑',   price: 0, bossOnly: true, type: 'special',   room: 'training', pos: { left:'45%',  bottom:'25%', size:'40px' } }
+    ]
+  },
+  attic: {
+    label: '阁楼', icon: '🏠',
+    items: [
+      { id: 's_crystal',   name: '水晶球',     icon: '🔮', price: 220, type: 'special', room: 'attic', pos: { left:'15%',  bottom:'40%', size:'30px' } },
+      { id: 's_telescope', name: '望远镜',     icon: '🔭', price: 240, type: 'special', room: 'attic', pos: { right:'15%', bottom:'10%', size:'34px' } },
+      { id: 's_globe',     name: '古董地球仪', icon: '🌐', price: 200, type: 'special', room: 'attic', pos: { left:'40%',  bottom:'15%', size:'32px' } }
+    ]
+  },
+  theme: {
+    label: '主题', icon: '🎨',
+    items: [
+      // 8 款室内通用地板（type=floor, room='indoor'）— 可铺 bedroom/living/petRoom/training/attic
+      { id: 'fl_star',    name: '星空',     icon: '⭐', price: 130, type: 'floor', room: 'indoor', wallBg: '#1a1a3e', floorBg: '#0c0c2e' },
+      { id: 'fl_rainbow', name: '彩虹',     icon: '🌈', price: 160, type: 'floor', room: 'indoor', wallBg: '#ffe0ec', floorBg: '#ffd0d0' },
+      { id: 'fl_grass',   name: '草地',     icon: '🌿', price: 120, type: 'floor', room: 'indoor', wallBg: '#c8e6c9', floorBg: '#4CAF50' },
+      { id: 'fl_ocean',   name: '海洋',     icon: '🌊', price: 160, type: 'floor', room: 'indoor', wallBg: '#b3e5fc', floorBg: '#0288d1' },
+      { id: 'fl_cloud',   name: '云朵天空', icon: '☁️', price: 130, type: 'floor', room: 'indoor', wallBg: '#e3f2fd', floorBg: '#bbdefb' },
+      { id: 'fl_sunset',  name: '晚霞',     icon: '🌅', price: 160, type: 'floor', room: 'indoor', wallBg: '#ff8a65', floorBg: '#d84315' },
+      { id: 'fl_candy',   name: '糖果屋',   icon: '🍬', price: 130, type: 'floor', room: 'indoor', wallBg: '#f8bbd0', floorBg: '#f48fb1' },
+      { id: 'fl_space',   name: '太空',     icon: '🪐', price: 200, type: 'floor', room: 'indoor', wallBg: '#1a0033', floorBg: '#0d001a' }
     ]
   },
   pet: {
-    label: '宠物', icon: '🐾', zone: 'pet',
+    label: '宠物', icon: '🐾',
     items: [
       // 普通宠物（200 钱）— 常见动物
-      { id: 'p_dog',     name: '小狗',     icon: '🐕', price: 200, tier: 'common', gif: 'gifs/dog.gif',     voice: 'dog' },
-      { id: 'p_cat',     name: '小猫',     icon: '🐈', price: 200, tier: 'common', gif: 'gifs/cat.gif',     voice: 'cat' },
-      { id: 'p_rabbit',  name: '兔子',     icon: '🐰', price: 200, tier: 'common', gif: 'gifs/rabbit.gif',  voice: 'rabbit' },
-      { id: 'p_hamster', name: '仓鼠',     icon: '🐹', price: 200, tier: 'common', gif: 'gifs/hamster.gif', voice: 'hamster' },
-      { id: 'p_bird',    name: '小鸟',     icon: '🐦', price: 200, tier: 'common', gif: 'gifs/bird.gif',    voice: 'bird' },
-      { id: 'p_fish',    name: '金鱼',     icon: '🐟', price: 200, tier: 'common', gif: 'gifs/gold_fish.gif', aquatic: true, voice: 'fish' },
-      { id: 'p_panda',   name: '熊猫',     icon: '🐼', price: 200, tier: 'common', gif: 'gifs/panada.gif',  voice: 'panda' },
+      { id: 'p_dog',     name: '小狗',     icon: '🐕', price: 200, type: 'pet', tier: 'common', gif: 'gifs/dog.gif',     voice: 'dog' },
+      { id: 'p_cat',     name: '小猫',     icon: '🐈', price: 200, type: 'pet', tier: 'common', gif: 'gifs/cat.gif',     voice: 'cat' },
+      { id: 'p_rabbit',  name: '兔子',     icon: '🐰', price: 200, type: 'pet', tier: 'common', gif: 'gifs/rabbit.gif',  voice: 'rabbit' },
+      { id: 'p_hamster', name: '仓鼠',     icon: '🐹', price: 200, type: 'pet', tier: 'common', gif: 'gifs/hamster.gif', voice: 'hamster' },
+      { id: 'p_bird',    name: '小鸟',     icon: '🐦', price: 200, type: 'pet', tier: 'common', gif: 'gifs/bird.gif',    voice: 'bird' },
+      { id: 'p_fish',    name: '金鱼',     icon: '🐟', price: 200, type: 'pet', tier: 'common', gif: 'gifs/gold_fish.gif', aquatic: true, voice: 'fish' },
+      { id: 'p_panda',   name: '熊猫',     icon: '🐼', price: 200, type: 'pet', tier: 'common', gif: 'gifs/panada.gif',  voice: 'panda' },
       // 稀有宠物（400 钱）— 奇幻/异国
-      { id: 'p_dragon',  name: '小恐龙',   icon: '🦖', price: 400, tier: 'rare',   gif: 'gifs/Tyrannosaurus_rex.gif', voice: 'dragon' },
-      { id: 'p_unicorn', name: '独角兽',   icon: '🦄', price: 400, tier: 'rare',   gif: 'gifs/unicorn.gif',  voice: 'unicorn' },
-      { id: 'p_whale',   name: '抹香鲸',   icon: '🐋', price: 400, tier: 'rare',   gif: 'gifs/whale.gif',    aquatic: true, voice: 'whale' },
-      { id: 'p_shark',   name: '鲨鱼宝宝', icon: '🦈', price: 400, tier: 'rare',   gif: 'gifs/shark.gif',    aquatic: true, voice: 'shark' }
+      { id: 'p_dragon',  name: '小恐龙',   icon: '🦖', price: 400, type: 'pet', tier: 'rare',   gif: 'gifs/Tyrannosaurus_rex.gif', voice: 'dragon' },
+      { id: 'p_unicorn', name: '独角兽',   icon: '🦄', price: 400, type: 'pet', tier: 'rare',   gif: 'gifs/unicorn.gif',  voice: 'unicorn' },
+      { id: 'p_whale',   name: '抹香鲸',   icon: '🐋', price: 400, type: 'pet', tier: 'rare',   gif: 'gifs/whale.gif',    aquatic: true, voice: 'whale' },
+      { id: 'p_shark',   name: '鲨鱼宝宝', icon: '🦈', price: 400, type: 'pet', tier: 'rare',   gif: 'gifs/shark.gif',    aquatic: true, voice: 'shark' }
     ]
   },
   music: {
-    label: '音乐', icon: '🎵', zone: 'music',
+    label: '音乐', icon: '🎵',
     items: [
-      { id: 'bgm_happy',     name: '欢乐曲', icon: '😄', price: 120, file: 'music/happy.mp3' },
-      { id: 'bgm_adventure', name: '冒险曲', icon: '⚔️', price: 160, file: 'music/adventure.mp3' },
-      { id: 'bgm_lullaby',   name: '摇篮曲', icon: '🌙', price: 120, file: 'music/lullaby.mp3' },
-      { id: 'bgm_hero',      name: '英雄曲', icon: '🦸', price: 200, file: 'music/hero.mp3' },
-      { id: 'bgm_magic',     name: '魔法曲', icon: '✨', price: 160, file: 'music/magic.mp3' }
+      { id: 'bgm_happy',     name: '欢乐曲', icon: '😄', price: 120, type: 'music', file: 'music/happy.mp3' },
+      { id: 'bgm_adventure', name: '冒险曲', icon: '⚔️', price: 160, type: 'music', file: 'music/adventure.mp3' },
+      { id: 'bgm_lullaby',   name: '摇篮曲', icon: '🌙', price: 120, type: 'music', file: 'music/lullaby.mp3' },
+      { id: 'bgm_hero',      name: '英雄曲', icon: '🦸', price: 200, type: 'music', file: 'music/hero.mp3' },
+      { id: 'bgm_magic',     name: '魔法曲', icon: '✨', price: 160, type: 'music', file: 'music/magic.mp3' }
     ]
   },
   // 心愿商店占位：tab 入口用，items 由 this.data.wishShop.items 动态提供
   wish: {
-    label: '心愿', icon: '💝', zone: 'wish',
+    label: '心愿', icon: '💝',
     items: []
   }
 };
@@ -853,7 +912,7 @@ const app = {
   data: null,
   currentPage: 'home',
   pendingBuyItem: null,
-  shopCategory: 'furniture',
+  shopCategory: 'expand',
   battleAnimating: false,
   currentNurturePetId: null,
   _syncTimer: null,
@@ -948,7 +1007,36 @@ const app = {
 
   // ---- 数据管理 ----
   getDefaultHouse() {
-    return { items: [], floor: null, pets: [] };
+    const rooms = {};
+    for (const id of ROOM_ORDER) {
+      rooms[id] = { unlocked: id === 'bedroom', items: [], floor: { current: null } };
+    }
+    return {
+      currentRoom: 'bedroom',
+      rooms,
+      floorOwnedGlobal: [],
+      pets: []
+    };
+  },
+
+  // 拿到当前房间对象（供渲染层使用）
+  _currentRoomObj(charId) {
+    const h = this.data.houses[charId];
+    if (!h || !h.rooms) return null;
+    const id = h.currentRoom || 'bedroom';
+    return h.rooms[id] || h.rooms.bedroom;
+  },
+
+  // 该角色所有房间装饰 ID 总和（判断商品是否已拥有用）
+  _allDecorations(charId) {
+    const h = this.data.houses[charId];
+    if (!h || !h.rooms) return [];
+    let all = [];
+    for (const id of ROOM_ORDER) {
+      const r = h.rooms[id];
+      if (r && r.items) all.push(...r.items);
+    }
+    return all;
   },
 
   _buildDefaultData(oldPoints = 0) {
@@ -1084,16 +1172,73 @@ const app = {
     if (!this.data.houses) this.data.houses = { leidi: this.getDefaultHouse(), diga: this.getDefaultHouse() };
     for (const k of Object.keys(CHARACTERS)) {
       if (!this.data.houses[k]) this.data.houses[k] = this.getDefaultHouse();
-      if (!this.data.houses[k].pets) this.data.houses[k].pets = [];
-      // 地板数据迁移: string → { current, owned }
       const h = this.data.houses[k];
-      if (typeof h.floor === 'string' || h.floor === null) {
-        const old = h.floor;
-        h.floor = { current: old, owned: old ? [old] : [] };
+      if (!h.pets) h.pets = [];
+
+      // ---- v30 多房间结构迁移 ----
+      if (!h.rooms) {
+        // 老结构：house = { items, floor:{current,owned}, pets }
+        const oldItems = Array.isArray(h.items) ? h.items : [];
+        let oldFloorCurrent = null;
+        let oldFloorOwned = [];
+        if (h.floor) {
+          if (typeof h.floor === 'string') {
+            oldFloorCurrent = h.floor;
+            oldFloorOwned = [h.floor];
+          } else if (typeof h.floor === 'object') {
+            oldFloorCurrent = h.floor.current || null;
+            oldFloorOwned = Array.isArray(h.floor.owned) ? h.floor.owned : [];
+          }
+        }
+
+        // 初始化 6 个房间
+        const rooms = {};
+        for (const id of ROOM_ORDER) {
+          rooms[id] = { unlocked: id === 'bedroom', items: [], floor: { current: null } };
+        }
+
+        // 分发老 items 到对应房间。BOSS 装饰强制留 bedroom（兼容老用户视觉），
+        // 普通装饰按 SHOP_ITEMS 中的 room 字段归位（新建的房间默认锁着，等用户解锁后才能看到）。
+        for (const id of oldItems) {
+          const item = this.findItem(id);
+          let target = 'bedroom';
+          if (item) {
+            if (item.bossOnly) target = 'bedroom';
+            else if (item.room && rooms[item.room]) target = item.room;
+          }
+          rooms[target].items.push(id);
+        }
+
+        // 地板：旧 owned 全部进 floorOwnedGlobal；旧 current 进 bedroom.floor.current
+        h.floorOwnedGlobal = [...oldFloorOwned];
+        if (oldFloorCurrent) rooms.bedroom.floor.current = oldFloorCurrent;
+
+        // 老用户补偿：曾买过 5+ 件装饰说明深度玩家 → 自动赠送解锁花园
+        // （老的 special 装饰大半归到花园，避免升级后大批装饰被锁住看不见）
+        if (oldItems.length >= 5) rooms.garden.unlocked = true;
+
+        h.rooms = rooms;
+        h.currentRoom = 'bedroom';
+        delete h.items;
+        delete h.floor;
+      } else {
+        // 已经是新结构，确保所有房间 ID 存在 + 字段齐全
+        for (const id of ROOM_ORDER) {
+          if (!h.rooms[id]) h.rooms[id] = { unlocked: id === 'bedroom', items: [], floor: { current: null } };
+          if (!Array.isArray(h.rooms[id].items)) h.rooms[id].items = [];
+          if (!h.rooms[id].floor) h.rooms[id].floor = { current: null };
+        }
+        if (!Array.isArray(h.floorOwnedGlobal)) h.floorOwnedGlobal = [];
+        if (!h.currentRoom || !h.rooms[h.currentRoom]) h.currentRoom = 'bedroom';
       }
-      if (!h.floor) h.floor = { current: null, owned: [] };
-      if (!h.floor.owned) h.floor.owned = [];
+      // bedroom 永远 unlocked
+      h.rooms.bedroom.unlocked = true;
+      // 当前房间被异常锁定时回到 bedroom
+      if (!h.rooms[h.currentRoom].unlocked) h.currentRoom = 'bedroom';
     }
+    // 全局设置（不分角色）
+    if (!this.data.settings) this.data.settings = {};
+    if (this.data.settings.petDisplayMode !== 'multiRoom') this.data.settings.petDisplayMode = 'roomBased';
     if (!this.data.petStatus) this.data.petStatus = {};
     for (const charId of Object.keys(CHARACTERS)) {
       if (!this.data.petStatus[charId]) this.data.petStatus[charId] = {};
@@ -1232,9 +1377,19 @@ const app = {
     if ((d.points || 0) > 0) return false;
     for (const k of Object.keys(d.houses || {})) {
       const h = d.houses[k] || {};
+      // 老结构兼容
       if ((h.items || []).length > 0) return false;
-      if ((h.pets || []).length > 0) return false;
       if (h.floor && (h.floor.owned || []).length > 0) return false;
+      // v30 新结构
+      if (h.rooms) {
+        for (const rid of Object.keys(h.rooms)) {
+          const r = h.rooms[rid] || {};
+          if ((r.items || []).length > 0) return false;
+          if (rid !== 'bedroom' && r.unlocked) return false;  // 解锁过任何非 bedroom 房间也算非空
+        }
+      }
+      if ((h.floorOwnedGlobal || []).length > 0) return false;
+      if ((h.pets || []).length > 0) return false;
     }
     if (d.battle) {
       if ((d.battle.trophies || []).length > 0) return false;
@@ -1985,13 +2140,26 @@ const app = {
     const charId = this.data.currentCharacter;
     const char = CHARACTERS[charId];
     const house = this.data.houses[charId];
+    const roomId = house.currentRoom || 'bedroom';
+    const room = house.rooms[roomId];
     const trophies = this.data.battle.trophies;
     const bossTrophies = this.data.battle.bossTrophies || [];
 
-    document.getElementById('house-title').textContent = char.name + '的小屋';
+    document.getElementById('house-title').textContent = char.name + '的' + ROOMS[roomId].name;
 
-    // 地板墙纸
-    const floorId = house.floor && house.floor.current ? house.floor.current : null;
+    // 渲染房间切换条
+    this._renderRoomTabs();
+
+    // 房间主题 class
+    const roomEl = document.getElementById('house-room');
+    if (roomEl) {
+      roomEl.className = 'room ' + ROOM_ORDER.map(r => 'room-' + r).map(c => c === ('room-' + roomId) ? c : '').join(' ').trim();
+      // 简化：只保留当前房间 class
+      roomEl.className = 'room room-' + roomId;
+    }
+
+    // 地板墙纸（按当前房间的 floor.current 渲染；无则清空让 CSS 类生效）
+    const floorId = room.floor && room.floor.current ? room.floor.current : null;
     const floorItem = floorId ? this.findItem(floorId) : null;
     const wallEl = document.getElementById('room-wall');
     const floorEl = document.getElementById('room-floor');
@@ -1999,23 +2167,24 @@ const app = {
     floorEl.style.background = floorItem ? floorItem.floorBg : '';
 
     // 墙上装饰 — 绝对定位
-    const wallItems = house.items.filter(id => this.findItemCategory(id) === 'wallDecor')
-      .map(id => this.findItem(id)).filter(Boolean);
+    const wallItems = room.items.map(id => this.findItem(id)).filter(i => i && i.type === 'wallDecor');
     document.getElementById('room-wall-decor').innerHTML = wallItems.map(i => {
       const p = i.pos || {};
       return `<span class="room-item-placed" style="${p.left?'left:'+p.left+';':''}${p.right?'right:'+p.right+';':''}${p.top?'top:'+p.top+';':''}${p.bottom?'bottom:'+p.bottom+';':''}font-size:${p.size||'26px'}">${i.icon}</span>`;
     }).join('');
 
-    // 战利品墙（右侧）- 按钮入口
+    // 战利品墙（右侧）— 主入口在勇者馆；勇者馆未解锁时在卧室也能看怪兽墙作为兜底
     let trophyHtml = '';
-    if (trophies.length > 0) {
+    const trainingUnlocked = house.rooms.training.unlocked;
+    const showMonsterWall = roomId === 'training' || (!trainingUnlocked && roomId === 'bedroom');
+    if (showMonsterWall && trophies.length > 0) {
       trophyHtml += `<button class="trophy-wall-btn" onclick="app.showTrophyWall()">
         <span class="trophy-wall-icon">🏆</span>
         <span class="trophy-wall-label">怪兽墙</span>
         <span class="trophy-wall-count">${trophies.length}</span>
       </button>`;
     }
-    if (bossTrophies.length > 0) {
+    if (roomId === 'training' && bossTrophies.length > 0) {
       trophyHtml += `<button class="trophy-wall-btn boss-trophy-btn" onclick="app.showBossTrophyWall()">
         <span class="trophy-wall-icon">👑</span>
         <span class="trophy-wall-label">BOSS墙</span>
@@ -2028,10 +2197,11 @@ const app = {
     document.getElementById('room-character').innerHTML =
       `<img src="${char.img}" alt="${char.name}" style="width:90px;height:110px;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.2))">`;
 
-    // 所有宠物统一漫游（不再区分水生/陆地）
-    const pets = (house.pets || []).map(id => this.findItem(id)).filter(Boolean);
+    // 宠物显示模式
+    const allPets = (house.pets || []).map(id => this.findItem(id)).filter(Boolean);
+    const petsToShow = this._petsForCurrentRoom(allPets, roomId);
     const petsRow = document.getElementById('room-pets-row');
-    petsRow.innerHTML = pets.map((pet, i) => {
+    petsRow.innerHTML = petsToShow.map((pet, i) => {
       const mood = this.getPetMood(charId, pet.id);
       const startX = 10 + (i * 25) % 75;
       const startY = 10 + ((i * 37) % 60);
@@ -2045,20 +2215,126 @@ const app = {
     this.startPetRoaming();
 
     // 家具 — 绝对定位到地板
-    const furnitureItems = house.items.filter(id => this.findItemCategory(id) === 'furniture')
-      .map(id => this.findItem(id)).filter(Boolean);
+    const furnitureItems = room.items.map(id => this.findItem(id)).filter(i => i && i.type === 'furniture');
     document.getElementById('room-furniture').innerHTML = furnitureItems.map(i => {
       const p = i.pos || {};
       return `<span class="room-item-placed" style="${p.left?'left:'+p.left+';':''}${p.right?'right:'+p.right+';':''}${p.top?'top:'+p.top+';':''}${p.bottom?'bottom:'+p.bottom+';':''}font-size:${p.size||'28px'}">${i.icon}</span>`;
     }).join('');
 
     // 特殊装饰 — 绝对定位到地板
-    const specialItems = house.items.filter(id => this.findItemCategory(id) === 'special')
-      .map(id => this.findItem(id)).filter(Boolean);
+    const specialItems = room.items.map(id => this.findItem(id)).filter(i => i && i.type === 'special');
     document.getElementById('room-special').innerHTML = specialItems.map(i => {
       const p = i.pos || {};
       return `<span class="room-item-placed" style="${p.left?'left:'+p.left+';':''}${p.right?'right:'+p.right+';':''}${p.top?'top:'+p.top+';':''}${p.bottom?'bottom:'+p.bottom+';':''}font-size:${p.size||'26px'}">${i.icon}</span>`;
     }).join('');
+  },
+
+  // 当前房间应展示哪些宠物
+  _petsForCurrentRoom(allPets, roomId) {
+    const mode = (this.data.settings && this.data.settings.petDisplayMode) || 'roomBased';
+    const charId = this.data.currentCharacter;
+    const petRoomUnlocked = this.data.houses[charId].rooms.petRoom.unlocked;
+    if (mode === 'multiRoom') {
+      // 多房间漫游：bedroom + petRoom + garden 都展示，每个房间随机分布一部分宠物
+      if (['bedroom', 'petRoom', 'garden'].includes(roomId)) return allPets;
+      return [];
+    }
+    // roomBased（默认）
+    if (!petRoomUnlocked) {
+      // 宠物房未解锁 → 仅卧室展示
+      return roomId === 'bedroom' ? allPets : [];
+    }
+    return roomId === 'petRoom' ? allPets : [];
+  },
+
+  // 渲染顶部房间切换条
+  _renderRoomTabs() {
+    const bar = document.getElementById('room-tabs');
+    if (!bar) return;
+    const charId = this.data.currentCharacter;
+    const house = this.data.houses[charId];
+    const cur = house.currentRoom || 'bedroom';
+    bar.innerHTML = ROOM_ORDER.map(id => {
+      const room = ROOMS[id];
+      const unlocked = house.rooms[id].unlocked;
+      const active = id === cur ? 'active' : '';
+      const lockClass = unlocked ? '' : 'locked';
+      const lockBadge = unlocked ? '' : `<span class="room-tab-lock">🔒 ${room.unlockPrice}</span>`;
+      return `<button class="room-tab ${active} ${lockClass}" onclick="app.switchRoom('${id}')">
+        <span class="room-tab-icon">${room.icon}</span>
+        <span class="room-tab-name">${room.name}</span>
+        ${lockBadge}
+      </button>`;
+    }).join('');
+  },
+
+  switchRoom(roomId) {
+    if (!ROOMS[roomId]) return;
+    const charId = this.data.currentCharacter;
+    const house = this.data.houses[charId];
+    const room = house.rooms[roomId];
+    if (!room.unlocked) {
+      this._promptUnlockRoom(roomId);
+      return;
+    }
+    house.currentRoom = roomId;
+    this.saveData();
+    this.renderHouse();
+  },
+
+  _promptUnlockRoom(roomId) {
+    const room = ROOMS[roomId];
+    const cost = room.unlockPrice;
+    const have = this.data.points;
+    if (have < cost) {
+      const diff = cost - have;
+      this.showToast(`建造${room.name}需要 ${cost} 钱，还差 ${diff} 钱~`);
+      return;
+    }
+    if (!confirm(`花 ${cost} 钱建造${room.name}吗？\n建好后可以开始装饰啦！`)) return;
+    this._unlockRoom(roomId, true);
+  },
+
+  _unlockRoom(roomId, jumpToIt) {
+    const room = ROOMS[roomId];
+    const cost = room.unlockPrice;
+    if (this.data.points < cost) { this.showToast('钱不够哦~'); return; }
+    const charId = this.data.currentCharacter;
+    const house = this.data.houses[charId];
+    if (house.rooms[roomId].unlocked) return;
+    this.data.points -= cost;
+    house.rooms[roomId].unlocked = true;
+    if (jumpToIt) house.currentRoom = roomId;
+    this.saveData();
+    this.updateAllPoints();
+    SFX.play('buy');
+    this.celebrate();
+    setTimeout(() => this.celebrate(), 300);
+    this.showToast(`${room.icon} ${room.name}建好啦！`);
+    if (this.currentPage === 'house') this.renderHouse();
+    if (this.currentPage === 'shop') this.renderShop();
+  },
+
+  // ---- 小屋设置（宠物显示模式）----
+  openHouseSettings() {
+    const cur = (this.data.settings && this.data.settings.petDisplayMode) || 'roomBased';
+    document.querySelectorAll('#house-settings-modal .pet-mode-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === cur);
+    });
+    document.getElementById('house-settings-modal').classList.add('show');
+  },
+
+  closeHouseSettings() {
+    document.getElementById('house-settings-modal').classList.remove('show');
+  },
+
+  setPetDisplayMode(mode) {
+    if (mode !== 'roomBased' && mode !== 'multiRoom') return;
+    if (!this.data.settings) this.data.settings = {};
+    this.data.settings.petDisplayMode = mode;
+    this.saveData();
+    this.openHouseSettings();  // 刷新 active 状态
+    if (this.currentPage === 'house') this.renderHouse();
   },
 
   // 宠物漫游动画
@@ -2102,9 +2378,10 @@ const app = {
     const items = SHOP_ITEMS[this.shopCategory].items.filter(i => !i.bossOnly);
     const charId = this.data.currentCharacter;
     const house = this.data.houses[charId];
-    const floorOwned = house.floor && house.floor.owned ? house.floor.owned : [];
+    const floorOwned = house.floorOwnedGlobal || [];
     const musicOwned = (this.data.music && this.data.music.owned) || [];
-    const ownedIds = [...house.items, ...floorOwned, ...(house.pets || []), ...musicOwned].filter(Boolean);
+    const ownedDecorations = this._allDecorations(charId);
+    const ownedIds = [...ownedDecorations, ...floorOwned, ...(house.pets || []), ...musicOwned].filter(Boolean);
     const char = CHARACTERS[charId];
 
     // 商店提示
@@ -2120,8 +2397,21 @@ const app = {
         notice += `<button class="pet-slot-unlock-btn" onclick="app.unlockPetSlot()">解锁第 ${slots + 1} 个宠物位（${nextCost} 钱）</button>`;
       }
     }
-    if (this.shopCategory === 'floor') {
-      notice = `<div class="shop-notice">购买后立即应用到${char.name}的小屋</div>`;
+    if (this.shopCategory === 'theme') {
+      notice = `<div class="shop-notice">8 款室内主题，可在卧室/客厅/宠物房/勇者馆/阁楼任选铺设</div>`;
+    }
+    if (this.shopCategory === 'expand') {
+      notice = `<div class="shop-notice">建造新房间，解锁更多装饰空间 🏗️</div>`;
+    }
+    if (this.shopCategory === 'training') {
+      notice = `<div class="shop-notice">击败 BOSS 才能获得专属装饰，会自动放进勇者馆 👑</div>`;
+    }
+    if (ROOMS[this.shopCategory] && this.shopCategory !== 'training') {
+      // 房间分类提示当前房间是否解锁
+      const r = house.rooms[this.shopCategory];
+      if (r && !r.unlocked) {
+        notice = `<div class="shop-notice locked-room-notice">🔒 ${ROOMS[this.shopCategory].name}还没建造，购买后会等到房间建好再展示</div>`;
+      }
     }
     if (this.shopCategory === 'music') {
       notice = `<div class="shop-notice">购买后点击"播放"即可聆听 🎵</div>`;
@@ -2129,8 +2419,17 @@ const app = {
 
     grid.innerHTML = notice + items.map(item => {
       const owned = ownedIds.includes(item.id);
+      // 扩建商品独立判定（已解锁视为已建造）
+      if (item.type === 'expand') {
+        const r = house.rooms[item.unlockRoom];
+        const built = r && r.unlocked;
+        return `<div class="shop-item ${built ? 'owned' : ''}" onclick="${built ? '' : `app.tryBuy('${item.id}')`}">
+          <div class="shop-item-icon">${item.icon}</div>
+          <div class="shop-item-name">${item.name}</div>
+          <div class="shop-item-price">${built ? '已建造' : '&#9733; ' + item.price}</div>
+        </div>`;
+      }
       if (this.shopCategory === 'music' && owned) {
-        // 已购买的音乐显示播放/停止按钮
         const isPlaying = this.data.music.current === item.id && this.data.music.enabled;
         return `<div class="shop-item owned music-item" onclick="app.toggleMusic('${item.id}')">
           <div class="shop-item-icon">${item.icon}</div>
@@ -2138,11 +2437,20 @@ const app = {
           <div class="shop-item-price">${isPlaying ? '⏸ 停止' : '▶️ 播放'}</div>
         </div>`;
       }
+      // 房间锁定状态：显示锁图标 + 暗化
+      let lockedRoom = false;
+      if (['furniture', 'wallDecor', 'special'].includes(item.type) && item.room && house.rooms[item.room]) {
+        lockedRoom = !house.rooms[item.room].unlocked;
+      }
+      if (item.type === 'floor' && item.room === 'garden' && !house.rooms.garden.unlocked) {
+        lockedRoom = true;
+      }
       const tierBadge = item.tier === 'rare'
         ? '<span class="shop-tier-badge rare">稀有</span>'
         : (item.tier === 'common' ? '<span class="shop-tier-badge common">普通</span>' : '');
-      return `<div class="shop-item ${owned ? 'owned' : ''} ${item.tier ? 'tier-' + item.tier : ''}" onclick="app.tryBuy('${item.id}')">
-        ${tierBadge}
+      const lockBadge = lockedRoom ? '<span class="shop-lock-badge">🔒</span>' : '';
+      return `<div class="shop-item ${owned ? 'owned' : ''} ${lockedRoom ? 'room-locked' : ''} ${item.tier ? 'tier-' + item.tier : ''}" onclick="app.tryBuy('${item.id}')">
+        ${tierBadge}${lockBadge}
         <div class="shop-item-icon">${item.icon}</div>
         <div class="shop-item-name">${item.name}</div>
         <div class="shop-item-price">${owned ? '已拥有' : '&#9733; ' + item.price}</div>
@@ -2358,6 +2666,7 @@ const app = {
   },
 
   findItemCategory(id) {
+    // 返回顶级商店分类 key（v30 起多用作 tab 路由）。装饰类的渲染调度请用 item.type
     for (const [key, cat] of Object.entries(SHOP_ITEMS)) {
       if (cat.items.find(i => i.id === id)) return key;
     }
@@ -2367,20 +2676,46 @@ const app = {
   tryBuy(itemId) {
     const charId = this.data.currentCharacter;
     const house = this.data.houses[charId];
-    const floorOwned = house.floor && house.floor.owned ? house.floor.owned : [];
+    const floorOwned = house.floorOwnedGlobal || [];
     const musicOwned = (this.data.music && this.data.music.owned) || [];
-    const allOwned = [...house.items, ...floorOwned, ...(house.pets || []), ...musicOwned].filter(Boolean);
-    if (allOwned.includes(itemId)) return;
+    const allOwned = [...this._allDecorations(charId), ...floorOwned, ...(house.pets || []), ...musicOwned].filter(Boolean);
 
     const item = this.findItem(itemId);
     if (!item) return;
 
-    const cat = this.findItemCategory(itemId);
+    // 扩建商品独立判定（已解锁视为已拥有）
+    if (item.type === 'expand') {
+      const targetRoom = item.unlockRoom;
+      if (house.rooms[targetRoom] && house.rooms[targetRoom].unlocked) return;
+      this.pendingBuyItem = item;
+      document.getElementById('buy-preview').textContent = item.icon;
+      document.getElementById('buy-name').textContent = item.name;
+      document.getElementById('buy-price-num').textContent = item.price;
+      document.getElementById('buy-modal').classList.add('show');
+      return;
+    }
+
+    if (allOwned.includes(itemId)) return;
+
+    // 装饰类（family/wallDecor/special）：检查所属房间是否解锁
+    if (['furniture', 'wallDecor', 'special'].includes(item.type) && item.room) {
+      const targetRoom = house.rooms[item.room];
+      if (!targetRoom || !targetRoom.unlocked) {
+        this.showToast(`先建造${ROOMS[item.room].name}才能购买~`);
+        return;
+      }
+    }
+
+    // 花园主题地板：要求 garden 已解锁
+    if (item.type === 'floor' && item.room === 'garden') {
+      if (!house.rooms.garden.unlocked) {
+        this.showToast('先建造花园才能购买花园主题~');
+        return;
+      }
+    }
 
     // 宠物位上限检查
-    if (cat === 'pet') {
-      const charId = this.data.currentCharacter;
-      const house = this.data.houses[charId];
+    if (item.type === 'pet') {
       const slots = (this.data.petSlots && this.data.petSlots.unlockedCount) || 2;
       if ((house.pets || []).length >= slots) {
         const slotMsg = slots < 4
@@ -2458,29 +2793,52 @@ const app = {
       setTimeout(() => { document.getElementById('buy-name').style.color = ''; this.closeBuy(); }, 1000);
       return;
     }
-    this.data.points -= item.price;
     const charId = this.data.currentCharacter;
     const house = this.data.houses[charId];
-    const cat = this.findItemCategory(item.id);
 
-    if (cat === 'floor') {
-      if (!house.floor || !house.floor.owned) house.floor = { current: null, owned: [] };
-      house.floor.owned.push(item.id);
-      house.floor.current = item.id;
-    } else if (cat === 'pet') {
+    // 扩建房间走专门的解锁流程，解锁后跳到小屋让孩子看到新房间
+    if (item.type === 'expand') {
+      this.closeBuy();
+      this._unlockRoom(item.unlockRoom, true);
+      this.renderShop();
+      this.goToPage('house');
+      return;
+    }
+
+    this.data.points -= item.price;
+
+    if (item.type === 'floor') {
+      if (!Array.isArray(house.floorOwnedGlobal)) house.floorOwnedGlobal = [];
+      house.floorOwnedGlobal.push(item.id);
+      let target;
+      if (item.room === 'garden') {
+        target = 'garden';
+      } else {
+        // 室内通用地板：当前在花园就回退到 bedroom，避免把室内主题铺到户外
+        target = (house.currentRoom === 'garden') ? 'bedroom' : (house.currentRoom || 'bedroom');
+      }
+      if (house.rooms[target]) {
+        house.rooms[target].floor.current = item.id;
+        // 让孩子立刻看到效果：自动切到目标房间
+        if (house.currentRoom !== target) house.currentRoom = target;
+      }
+    } else if (item.type === 'pet') {
       house.pets.push(item.id);
       this.initPetStatus(charId, item.id);
-    } else if (cat === 'music') {
+    } else if (item.type === 'music') {
       if (!this.data.music) this.data.music = { owned: [], current: null, enabled: true };
       this.data.music.owned.push(item.id);
     } else {
-      house.items.push(item.id);
+      // furniture / wallDecor / special — 落到所属房间
+      const targetRoom = house.rooms[item.room] ? item.room : 'bedroom';
+      house.rooms[targetRoom].items.push(item.id);
+      // 自动切到目标房间，让孩子看到效果
+      if (house.currentRoom !== targetRoom) house.currentRoom = targetRoom;
     }
 
     this.saveData(); this.updateAllPoints(); this.closeBuy(); SFX.play('buy'); this.celebrate(); this.renderShop();
 
-    // 如果购买的是有GIF的宠物，播放GIF动画
-    if (cat === 'pet' && item.gif) {
+    if (item.type === 'pet' && item.gif) {
       this.showGif(item.gif, `🎉 ${item.name}来啦！`, 3000);
     }
   },
@@ -2899,19 +3257,29 @@ const app = {
 
   // ---- 换装系统 ----
   showFloorPicker() {
-    const house = this.data.houses[this.data.currentCharacter];
-    const owned = house.floor && house.floor.owned ? house.floor.owned : [];
-    if (owned.length === 0) {
-      this.showToast('还没有地板哦，去商店逛逛吧！');
+    const charId = this.data.currentCharacter;
+    const house = this.data.houses[charId];
+    const allOwned = house.floorOwnedGlobal || [];
+    const roomId = house.currentRoom || 'bedroom';
+    const room = house.rooms[roomId];
+    // 按当前房间过滤可铺地板：花园只显示花园主题；其他房间只显示通用室内地板
+    const allowed = allOwned.map(id => this.findItem(id)).filter(item => {
+      if (!item || item.type !== 'floor') return false;
+      if (roomId === 'garden') return item.room === 'garden';
+      return item.room === 'indoor' || !item.room;  // 兼容老数据无 room 字段
+    });
+    if (allowed.length === 0) {
+      const tip = roomId === 'garden'
+        ? '还没买花园主题哦，去商店"花园"分类看看~'
+        : '还没买地板哦，去商店"主题"分类逛逛吧！';
+      this.showToast(tip);
       return;
     }
-    const current = house.floor.current;
+    const current = room && room.floor ? room.floor.current : null;
     const grid = document.getElementById('floor-picker-grid');
-    grid.innerHTML = owned.map(id => {
-      const item = this.findItem(id);
-      if (!item) return '';
-      const isActive = id === current;
-      return `<div class="floor-picker-item ${isActive ? 'active' : ''}" onclick="app.switchFloor('${id}')">
+    grid.innerHTML = allowed.map(item => {
+      const isActive = item.id === current;
+      return `<div class="floor-picker-item ${isActive ? 'active' : ''}" onclick="app.switchFloor('${item.id}')">
         <div class="floor-picker-preview" style="background:linear-gradient(180deg,${item.wallBg},${item.floorBg})"></div>
         <div class="floor-picker-icon">${item.icon}</div>
         <div class="floor-picker-name">${item.name}</div>
@@ -2922,8 +3290,13 @@ const app = {
   },
 
   switchFloor(floorId) {
-    const house = this.data.houses[this.data.currentCharacter];
-    house.floor.current = floorId;
+    const charId = this.data.currentCharacter;
+    const house = this.data.houses[charId];
+    const roomId = house.currentRoom || 'bedroom';
+    const room = house.rooms[roomId];
+    if (!room) return;
+    if (!room.floor) room.floor = { current: null };
+    room.floor.current = floorId;
     this.saveData();
     this.renderHouse();
     this.closeFloorPicker();
@@ -2946,7 +3319,19 @@ const app = {
     this.saveData();
   },
 
+  // 当前角色是否解锁了勇者馆（v30+ BOSS 战必须先解锁勇者馆）
+  _trainingUnlocked() {
+    const charId = this.data.currentCharacter;
+    const h = this.data.houses[charId];
+    return !!(h && h.rooms && h.rooms.training && h.rooms.training.unlocked);
+  },
+
   spawnBoss() {
+    if (!this._trainingUnlocked()) {
+      // 未解锁勇者馆 → 不触发 BOSS，回退到普通小怪
+      this.spawnMonster();
+      return;
+    }
     const defeated = (this.data.battle.bossTrophies || []).map(t => t.id);
     let avail = BOSSES.filter(b => !defeated.includes(b.id));
     if (avail.length === 0) avail = [...BOSSES];
@@ -3149,13 +3534,14 @@ const app = {
       // 发奖励：钱
       const reward = b.rewardPoints || 50;
       this.data.points += reward;
-      // 发奖励：BOSS 专属装饰加入当前角色的小屋（如已有则跳过，避免重复击败同一 BOSS 时多次添加）
+      // 发奖励：BOSS 专属装饰加入勇者馆（如已有则跳过，避免重复击败同一 BOSS 时多次添加）
       let rewardItem = null;
       if (b.rewardItem) {
         const charId = this.data.currentCharacter;
         const house = this.data.houses[charId];
-        if (!house.items.includes(b.rewardItem.id)) {
-          house.items.push(b.rewardItem.id);
+        const trainingItems = house.rooms.training.items;
+        if (!trainingItems.includes(b.rewardItem.id)) {
+          trainingItems.push(b.rewardItem.id);
         }
         rewardItem = b.rewardItem;
       }

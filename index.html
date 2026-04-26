@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <link rel="manifest" href="manifest.json">
   <title>宝贝任务乐园</title>
-  <link rel="stylesheet" href="style.css?v=29">
+  <link rel="stylesheet" href="style.css?v=30">
 </head>
 <body>
 
@@ -83,10 +83,13 @@
     <div class="page-header">
       <button class="btn-back" onclick="app.goToPage('home')">&#8592;</button>
       <h2 id="house-title">小屋</h2>
+      <button class="btn-house-settings" onclick="app.openHouseSettings()" title="小屋设置">&#9881;&#65039;</button>
       <div class="points-display points-small"><span class="star-icon">&#9733;</span> <span class="pts-val">0</span></div>
     </div>
+    <!-- 房间切换条 -->
+    <div class="room-tabs" id="room-tabs"></div>
     <!-- 房间 -->
-    <div class="room">
+    <div class="room room-bedroom" id="house-room">
       <!-- 墙壁 -->
       <div class="room-wall" id="room-wall">
         <div class="room-wall-light"></div>
@@ -111,6 +114,27 @@
       <button class="btn btn-small" onclick="app.showFloorPicker()" style="background:linear-gradient(135deg,#a29bfe,#6c5ce7);color:#fff">🎨 换装</button>
       <button class="btn btn-small" onclick="app.showPetList()" style="background:linear-gradient(135deg,#55efc4,#00b894);color:#fff">🐾 宠物</button>
       <button class="btn btn-small btn-confirm" onclick="app.goToPage('shop')">&#127873; 商店</button>
+    </div>
+  </div>
+
+  <!-- 小屋设置弹窗 -->
+  <div id="house-settings-modal" class="modal">
+    <div class="modal-content modal-house-settings">
+      <h3>&#9881;&#65039; 小屋设置</h3>
+      <div class="settings-section">
+        <div class="settings-label">宠物显示</div>
+        <div class="pet-mode-options">
+          <button class="pet-mode-btn" data-mode="roomBased" onclick="app.setPetDisplayMode('roomBased')">
+            <div class="pet-mode-title">按房间归位</div>
+            <div class="pet-mode-desc">默认。宠物房未解锁时在卧室；解锁后只在宠物房</div>
+          </button>
+          <button class="pet-mode-btn" data-mode="multiRoom" onclick="app.setPetDisplayMode('multiRoom')">
+            <div class="pet-mode-title">多房间漫游</div>
+            <div class="pet-mode-desc">卧室、宠物房、花园都能看到宠物</div>
+          </button>
+        </div>
+      </div>
+      <button class="btn btn-cancel" style="width:100%;margin-top:12px" onclick="app.closeHouseSettings()">关闭</button>
     </div>
   </div>
 
@@ -243,6 +267,6 @@
 
   <div id="celebration" class="celebration"></div>
   <button id="mute-btn" class="mute-btn" onclick="app.toggleMute()" title="背景音乐开关">🔊</button>
-  <script src="app.js?v=29"></script>
+  <script src="app.js?v=30"></script>
 </body>
 </html>
