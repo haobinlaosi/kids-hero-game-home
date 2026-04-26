@@ -14,7 +14,7 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
 .btn-cancel { background: #E8E8E8; color: #666; }
 .btn-switch { background: linear-gradient(135deg, #a18cd1, #fbc2eb); color: #fff; box-shadow: 0 3px 10px rgba(161,140,209,0.3); }
 
-/* ============ 积分 ============ */
+/* ============ 钱 ============ */
 .points-display { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #FFE066, #FFD700); padding: 8px 18px; border-radius: 30px; font-size: 22px; font-weight: 800; color: #B8860B; box-shadow: 0 3px 10px rgba(255,215,0,0.3); }
 .points-small { font-size: 16px; padding: 5px 12px; }
 .star-icon { color: #FF8C00; font-size: 1.1em; }
@@ -47,8 +47,22 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
 .btn-back:active { transform: scale(0.9); }
 
 /* ============ 任务 ============ */
-.task-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px; }
-.task-item { display: flex; align-items: center; gap: 12px; padding: 16px; background: #fff; border-radius: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.task-list { display: flex; flex-direction: column; gap: 14px; padding-bottom: 10px; }
+.task-group { padding: 12px; border-radius: 18px; }
+.task-group-header { display: flex; align-items: baseline; gap: 10px; padding: 4px 6px 10px; }
+.task-group-label { font-size: 16px; font-weight: 800; }
+.task-group-desc { font-size: 12px; color: #888; }
+.task-group-basic { background: linear-gradient(135deg, #FFF3D6, #FFE5B4); }
+.task-group-basic .task-group-label { color: #B8860B; }
+.task-group-growth { background: linear-gradient(135deg, #DCEFD9, #C8E6C9); }
+.task-group-growth .task-group-label { color: #2E7D32; }
+.task-group-special { background: linear-gradient(135deg, #ECD3F2, #E1BEE7); }
+.task-group-special .task-group-label { color: #6A1B9A; }
+.task-group-penalty { background: linear-gradient(135deg, #FFE0E0, #FFCDD2); }
+.task-group-penalty .task-group-label { color: #C62828; }
+.task-group .task-item { margin-bottom: 8px; }
+.task-group .task-item:last-child { margin-bottom: 0; }
+.task-item { display: flex; align-items: center; gap: 12px; padding: 16px; background: #fff; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 .task-icon { font-size: 32px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: #FFF3E0; border-radius: 14px; }
 .task-info { flex: 1; }
 .task-name { font-size: 18px; font-weight: 700; }
@@ -412,16 +426,6 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
 .modal.show { opacity: 1; pointer-events: auto; }
 .modal-content { background: #fff; border-radius: 28px; padding: 30px 24px; width: 85%; max-width: 340px; text-align: center; }
-.pin-display { display: flex; gap: 16px; justify-content: center; margin: 20px 0; }
-.pin-dot { width: 18px; height: 18px; border-radius: 50%; background: #e0e0e0; transition: background 0.15s, transform 0.15s; }
-.pin-dot.filled { background: #FF6B6B; transform: scale(1.2); }
-.pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
-.pin-btn { width: 64px; height: 64px; border: none; background: #f5f5f5; border-radius: 50%; font-size: 24px; font-weight: 700; cursor: pointer; margin: 0 auto; }
-.pin-btn:active { transform: scale(0.9); background: #e0e0e0; }
-.pin-btn-empty { visibility: hidden; }
-.pin-btn-del { font-size: 20px; color: #999; }
-.pin-error { animation: shake 0.4s ease; }
-@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
 .modal-buy { padding: 24px; }
 .buy-preview { font-size: 60px; margin-bottom: 8px; }
 .buy-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
@@ -859,6 +863,207 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
   font-size: 16px;
 }
 
+/* 宠物列表头 + 乐园按钮 */
+.pet-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px 10px;
+  font-size: 14px;
+  color: #555;
+}
+.pet-park-btn {
+  background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pet-slot-unlock-btn {
+  display: block;
+  width: 100%;
+  margin: 4px 0 12px;
+  background: linear-gradient(135deg, #FFE066, #FFB300);
+  color: #5a3d00;
+  border: none;
+  border-radius: 14px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pet-list-card { gap: 8px; }
+.pet-list-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.pet-send-park-btn,
+.pet-bring-back-btn {
+  background: #fff;
+  color: #6c5ce7;
+  border: 2px solid #a29bfe;
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.pet-bring-back-btn { background: linear-gradient(135deg, #a29bfe, #6c5ce7); color: #fff; border: none; }
+.pet-bring-back-btn.disabled { opacity: 0.4; cursor: not-allowed; background: #ccc; }
+.pet-list-park-hint { font-size: 12px; color: #999; }
+
+/* 商店宠物分档徽章 */
+.shop-tier-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 8px;
+  z-index: 1;
+}
+.shop-tier-badge.common { background: #e0e0e0; color: #666; }
+.shop-tier-badge.rare {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #5a3d00;
+  box-shadow: 0 0 6px rgba(255,215,0,0.6);
+}
+.shop-item.tier-rare { box-shadow: 0 0 0 2px #FFD700, 0 2px 8px rgba(255,215,0,0.3); }
+
+/* 战斗页宠物助攻提示 */
+.pet-actions-hint { font-size: 12px; color: #888; font-weight: normal; margin-left: 6px; }
+
+/* ============ 心愿商店 ============ */
+.wish-header {
+  background: linear-gradient(135deg, #FFE0EC, #FFC0DA);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wish-subtitle { font-size: 13px; color: #B9456E; flex: 1; line-height: 1.4; }
+.wish-mgr-btn {
+  background: #fff;
+  color: #B9456E;
+  border: 2px solid #FF80AB;
+  border-radius: 14px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.wish-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #B9456E;
+  font-size: 15px;
+  background: #fff;
+  border-radius: 14px;
+  line-height: 1.6;
+}
+.wish-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.wish-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px 10px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.wish-card.wish-ready {
+  background: linear-gradient(135deg, #fff, #FFE6F1);
+  box-shadow: 0 0 0 2px #FF80AB, 0 2px 12px rgba(255,128,171,0.3);
+}
+.wish-card.wish-pending { opacity: 0.7; }
+.wish-icon { font-size: 40px; height: 50px; display: flex; align-items: center; justify-content: center; }
+.wish-name { font-size: 14px; font-weight: 700; color: #333; line-height: 1.2; }
+.wish-rmb { font-size: 12px; color: #999; }
+.wish-game-price { font-size: 13px; font-weight: 700; color: #B8860B; }
+.wish-redeem-btn {
+  margin-top: 4px;
+  background: linear-gradient(135deg, #FF80AB, #F06292);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  width: 100%;
+}
+.wish-redeem-btn:active { transform: scale(0.95); }
+.wish-short {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #999;
+  background: #f5f5f5;
+  border-radius: 12px;
+  padding: 6px 8px;
+  width: 100%;
+}
+.wish-pending-tag {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #FFA000;
+  background: #FFF4E0;
+  border-radius: 12px;
+  padding: 6px 8px;
+  width: 100%;
+  font-weight: 700;
+}
+
+/* 心愿管理弹窗 */
+.wish-mgr-section { margin-bottom: 16px; }
+.wish-mgr-add { display: flex; flex-direction: column; gap: 8px; }
+.wish-mgr-add-row { display: flex; align-items: center; gap: 6px; }
+.wish-mgr-label { font-size: 13px; color: #666; }
+.wish-mgr-rmb, .wish-mgr-game {
+  width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 6px;
+  font-size: 13px; text-align: center;
+}
+.wish-mgr-unit { font-size: 12px; color: #999; }
+.wish-mgr-arrow { color: #ccc; font-size: 14px; }
+.wish-mgr-hint { font-size: 11px; color: #999; padding: 2px 0; }
+.wish-mgr-add-btn {
+  background: linear-gradient(135deg, #FF80AB, #F06292) !important;
+  border-radius: 14px !important;
+  padding: 8px 14px !important;
+  width: 100%;
+}
+.wish-mgr-row {
+  display: flex; align-items: center; gap: 8px; padding: 8px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+.wish-mgr-name { flex: 1; font-size: 14px; font-weight: 600; word-break: break-all; }
+.wish-mgr-price { font-size: 12px; color: #B8860B; font-weight: 700; white-space: nowrap; }
+.wish-mgr-pending { background: #FFF4E0; border-radius: 10px; padding: 8px; border-bottom: none; margin-bottom: 6px; }
+.wish-mgr-fulfill {
+  background: #00b894; color: #fff; border: none; border-radius: 12px;
+  padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+  white-space: nowrap;
+}
+.wish-mgr-done { opacity: 0.6; }
+.wish-mgr-date { font-size: 11px; color: #999; white-space: nowrap; }
+
 /* ============ 庆祝 ============ */
 .celebration { position: fixed; inset: 0; pointer-events: none; z-index: 200; }
 .confetti { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: confettiFall 1.5s ease-out forwards; }
@@ -933,11 +1138,27 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
   transition: background 0.15s;
 }
 .emoji-opt:active { background: #e0e0e0; }
-.task-mgr-add-row { display: flex; align-items: center; gap: 6px; }
+.task-mgr-add-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
 .task-mgr-add-btn {
-  background: #0984e3; color: #fff; border: none; border-radius: 50%;
-  width: 30px; height: 30px; font-size: 18px; cursor: pointer; line-height: 30px; text-align: center;
+  background: #0984e3; color: #fff; border: none; border-radius: 14px;
+  padding: 6px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
 }
+.task-mgr-cat-row { padding: 6px 0; }
+.task-mgr-cat-label { font-size: 13px; color: #666; }
+.task-mgr-cat-sel {
+  flex: 1; padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px;
+  font-size: 13px; background: #fff;
+}
+.task-mgr-move {
+  background: #f0f0f0; color: #555; border: none; border-radius: 6px;
+  width: 24px; height: 24px; font-size: 14px; cursor: pointer; line-height: 24px; text-align: center;
+}
+.task-mgr-move:disabled { opacity: 0.3; cursor: not-allowed; }
+.task-mgr-empty { font-size: 12px; color: #aaa; padding: 6px 0; }
+.task-mgr-section-basic h4 { color: #B8860B; border-color: #FFE5B4; }
+.task-mgr-section-growth h4 { color: #2E7D32; border-color: #C8E6C9; }
+.task-mgr-section-special h4 { color: #6A1B9A; border-color: #E1BEE7; }
+.task-mgr-section-penalty h4 { color: #C62828; border-color: #FFCDD2; }
 
 /* ============ BOSS 模式 ============ */
 .battle-monster.boss-mode {

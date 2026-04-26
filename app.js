@@ -5,35 +5,55 @@ const CHARACTERS = {
   diga: { name: '迪迦', desc: '奥特曼', img: 'icons/dijia.png' }
 };
 
+// 心愿商店：50 钱 = 1 元人民币
+const WISH_RATE = 50;
+
+const TASK_CATEGORIES = {
+  basic:   { label: '基础任务', desc: '每天的好习惯' },
+  growth:  { label: '成长任务', desc: '让自己变得更厉害' },
+  special: { label: '特别奖励', desc: '今天表现特别棒才有' },
+  penalty: { label: '扣分项',   desc: '小心不要这样做哦' }
+};
+const TASK_CATEGORY_ORDER = ['basic', 'growth', 'special', 'penalty'];
+
 const TASKS = [
-  { id: 'brush', name: '刷牙', icon: '🪥', points: 5 },
-  { id: 'tidy', name: '收拾玩具', icon: '🧸', points: 5 },
-  { id: 'eat', name: '自己吃饭', icon: '🍚', points: 10 },
-  { id: 'veggie', name: '吃青菜', icon: '🥦', points: 5 },
-  { id: 'chore', name: '帮忙做家务', icon: '🧹', points: 15 },
-  { id: 'early_sleep', name: '早睡', icon: '🌙', points: 10 },
-  { id: 'early_rise', name: '早起', icon: '🌅', points: 10 },
-  { id: 'study', name: '看书学习', icon: '📖', points: 10 },
-  { id: 'english', name: '学英语', icon: '🔤', points: 5 },
-  { id: 'exercise', name: '运动锻炼', icon: '⚽', points: 10 },
-  { id: 'obey', name: '听话', icon: '👍', points: 5 },
-  { id: 'hit', name: '打人', icon: '🚫', points: -5 }
+  // 基础任务（每日满分 65）
+  { id: 'brush',         name: '刷牙',           icon: '🪥', points: 5,   category: 'basic' },
+  { id: 'kindergarten',  name: '乖乖上幼儿园',   icon: '🎒', points: 10,  category: 'basic' },
+  { id: 'eat',           name: '自己吃饭',       icon: '🍚', points: 10,  category: 'basic' },
+  { id: 'veggie',        name: '吃青菜',         icon: '🥦', points: 10,  category: 'basic' },
+  { id: 'meat',          name: '吃肉',           icon: '🍖', points: 10,  category: 'basic' },
+  { id: 'bath_ok',       name: '洗澡配合',       icon: '🛁', points: 10,  category: 'basic' },
+  { id: 'sleep10',       name: '10点前上床',     icon: '🌙', points: 10,  category: 'basic' },
+  // 成长任务（每日满分 50）
+  { id: 'english',       name: '学英语',                 icon: '🔤', points: 10,  category: 'growth' },
+  { id: 'read',          name: '看书',                   icon: '📖', points: 10,  category: 'growth' },
+  { id: 'outdoor',       name: '户外运动',               icon: '⚽', points: 15,  category: 'growth' },
+  { id: 'express',       name: '主动表达自己的想法',     icon: '💬', points: 15,  category: 'growth' },
+  // 特别奖励（家长按需发放）
+  { id: 'brave',         name: '勇敢宝宝奖',     icon: '🦁', points: 20,  category: 'special' },
+  { id: 'emotion',       name: '情绪管理奖',     icon: '😌', points: 20,  category: 'special' },
+  { id: 'apology',       name: '主动道歉奖',     icon: '🤝', points: 15,  category: 'special' },
+  { id: 'persist',       name: '坚持完成奖',     icon: '💪', points: 20,  category: 'special' },
+  { id: 'cooperate',     name: '超级配合奖',     icon: '🌟', points: 20,  category: 'special' },
+  // 扣分项
+  { id: 'hit',           name: '打人',           icon: '🚫', points: -10, category: 'penalty' }
 ];
 
 const SHOP_ITEMS = {
   furniture: {
     label: '家具', icon: '🛋️', zone: 'floor',
     items: [
-      { id: 'f_sofa', name: '小沙发', icon: '🛋️', price: 20, pos: { left:'3%', bottom:'32%', size:'34px' } },
-      { id: 'f_table', name: '小桌子', icon: '🪑', price: 15, pos: { left:'25%', bottom:'28%', size:'28px' } },
-      { id: 'f_bed', name: '小床', icon: '🛏️', price: 25, pos: { right:'3%', bottom:'35%', size:'34px' } },
-      { id: 'f_shelf', name: '书架', icon: '📚', price: 20, pos: { right:'5%', bottom:'65%', size:'28px' } },
-      { id: 'f_tv', name: '电视', icon: '📺', price: 30, pos: { left:'42%', bottom:'68%', size:'30px' } },
-      { id: 'f_lamp', name: '台灯', icon: '💡', price: 15, pos: { left:'2%', bottom:'58%', size:'24px' } },
-      { id: 'f_bath', name: '浴缸', icon: '🛁', price: 30, pos: { right:'25%', bottom:'5%', size:'30px' } },
-      { id: 'f_piano', name: '钢琴', icon: '🎹', price: 35, pos: { left:'12%', bottom:'5%', size:'32px' } },
-      { id: 'f_computer', name: '电脑', icon: '💻', price: 25, pos: { right:'18%', bottom:'55%', size:'26px' } },
-      { id: 'f_fridge', name: '冰箱', icon: '🧊', price: 20, pos: { right:'2%', bottom:'55%', size:'28px' } },
+      { id: 'f_sofa', name: '小沙发', icon: '🛋️', price: 70, pos: { left:'3%', bottom:'32%', size:'34px' } },
+      { id: 'f_table', name: '小桌子', icon: '🪑', price: 50, pos: { left:'25%', bottom:'28%', size:'28px' } },
+      { id: 'f_bed', name: '小床', icon: '🛏️', price: 90, pos: { right:'3%', bottom:'35%', size:'34px' } },
+      { id: 'f_shelf', name: '书架', icon: '📚', price: 70, pos: { right:'5%', bottom:'65%', size:'28px' } },
+      { id: 'f_tv', name: '电视', icon: '📺', price: 110, pos: { left:'42%', bottom:'68%', size:'30px' } },
+      { id: 'f_lamp', name: '台灯', icon: '💡', price: 50, pos: { left:'2%', bottom:'58%', size:'24px' } },
+      { id: 'f_bath', name: '浴缸', icon: '🛁', price: 110, pos: { right:'25%', bottom:'5%', size:'30px' } },
+      { id: 'f_piano', name: '钢琴', icon: '🎹', price: 140, pos: { left:'12%', bottom:'5%', size:'32px' } },
+      { id: 'f_computer', name: '电脑', icon: '💻', price: 90, pos: { right:'18%', bottom:'55%', size:'26px' } },
+      { id: 'f_fridge', name: '冰箱', icon: '🧊', price: 70, pos: { right:'2%', bottom:'55%', size:'28px' } },
       // BOSS 专属奖励（不在商店出售，bossOnly）
       { id: 'br_b1', name: '火焰王座', icon: '🔥', price: 0, bossOnly: true, pos: { left:'38%', bottom:'25%', size:'40px' } },
       { id: 'br_b2', name: '冰雕熊',   icon: '🐻‍❄️', price: 0, bossOnly: true, pos: { right:'35%', bottom:'30%', size:'40px' } }
@@ -42,16 +62,16 @@ const SHOP_ITEMS = {
   wallDecor: {
     label: '墙饰', icon: '🖼️', zone: 'wall',
     items: [
-      { id: 'w_paint', name: '挂画', icon: '🖼️', price: 10, pos: { left:'5%', top:'12%', size:'28px' } },
-      { id: 'w_clock', name: '时钟', icon: '🕐', price: 15, pos: { left:'22%', top:'8%', size:'24px' } },
-      { id: 'w_photo', name: '照片墙', icon: '📷', price: 15, pos: { right:'22%', top:'10%', size:'24px' } },
-      { id: 'w_cert', name: '奖状', icon: '📜', price: 20, pos: { left:'38%', top:'5%', size:'24px' } },
-      { id: 'w_mirror', name: '镜子', icon: '🪞', price: 15, pos: { right:'5%', top:'12%', size:'26px' } },
-      { id: 'w_flag', name: '小旗帜', icon: '🚩', price: 10, pos: { left:'5%', top:'55%', size:'22px' } },
-      { id: 'w_map', name: '世界地图', icon: '🗺️', price: 20, pos: { right:'5%', top:'50%', size:'26px' } },
-      { id: 'w_note', name: '音符墙', icon: '🎵', price: 15, pos: { left:'22%', top:'50%', size:'22px' } },
-      { id: 'w_heart', name: '爱心墙', icon: '❤️', price: 10, pos: { right:'22%', top:'48%', size:'24px' } },
-      { id: 'w_star', name: '星星灯', icon: '🌟', price: 20, pos: { left:'55%', top:'5%', size:'24px' } },
+      { id: 'w_paint', name: '挂画', icon: '🖼️', price: 40, pos: { left:'5%', top:'12%', size:'28px' } },
+      { id: 'w_clock', name: '时钟', icon: '🕐', price: 50, pos: { left:'22%', top:'8%', size:'24px' } },
+      { id: 'w_photo', name: '照片墙', icon: '📷', price: 50, pos: { right:'22%', top:'10%', size:'24px' } },
+      { id: 'w_cert', name: '奖状', icon: '📜', price: 70, pos: { left:'38%', top:'5%', size:'24px' } },
+      { id: 'w_mirror', name: '镜子', icon: '🪞', price: 50, pos: { right:'5%', top:'12%', size:'26px' } },
+      { id: 'w_flag', name: '小旗帜', icon: '🚩', price: 40, pos: { left:'5%', top:'55%', size:'22px' } },
+      { id: 'w_map', name: '世界地图', icon: '🗺️', price: 70, pos: { right:'5%', top:'50%', size:'26px' } },
+      { id: 'w_note', name: '音符墙', icon: '🎵', price: 50, pos: { left:'22%', top:'50%', size:'22px' } },
+      { id: 'w_heart', name: '爱心墙', icon: '❤️', price: 40, pos: { right:'22%', top:'48%', size:'24px' } },
+      { id: 'w_star', name: '星星灯', icon: '🌟', price: 70, pos: { left:'55%', top:'5%', size:'24px' } },
       // BOSS 专属奖励（不在商店出售，bossOnly）
       { id: 'br_b3', name: '龙鳞盾', icon: '🛡️', price: 0, bossOnly: true, pos: { left:'40%', top:'30%', size:'34px' } },
       { id: 'br_b4', name: '雷神锤', icon: '🔨', price: 0, bossOnly: true, pos: { right:'40%', top:'30%', size:'34px' } }
@@ -60,29 +80,29 @@ const SHOP_ITEMS = {
   floor: {
     label: '地板墙纸', icon: '🎨', zone: 'bg',
     items: [
-      { id: 'fl_star', name: '星空', icon: '⭐', price: 35, wallBg: '#1a1a3e', floorBg: '#0c0c2e' },
-      { id: 'fl_rainbow', name: '彩虹', icon: '🌈', price: 40, wallBg: '#ffe0ec', floorBg: '#ffd0d0' },
-      { id: 'fl_grass', name: '草地', icon: '🌿', price: 30, wallBg: '#c8e6c9', floorBg: '#4CAF50' },
-      { id: 'fl_ocean', name: '海洋', icon: '🌊', price: 40, wallBg: '#b3e5fc', floorBg: '#0288d1' },
-      { id: 'fl_cloud', name: '云朵天空', icon: '☁️', price: 35, wallBg: '#e3f2fd', floorBg: '#bbdefb' },
-      { id: 'fl_sunset', name: '晚霞', icon: '🌅', price: 40, wallBg: '#ff8a65', floorBg: '#d84315' },
-      { id: 'fl_candy', name: '糖果屋', icon: '🍬', price: 35, wallBg: '#f8bbd0', floorBg: '#f48fb1' },
-      { id: 'fl_space', name: '太空', icon: '🪐', price: 50, wallBg: '#1a0033', floorBg: '#0d001a' }
+      { id: 'fl_star', name: '星空', icon: '⭐', price: 130, wallBg: '#1a1a3e', floorBg: '#0c0c2e' },
+      { id: 'fl_rainbow', name: '彩虹', icon: '🌈', price: 160, wallBg: '#ffe0ec', floorBg: '#ffd0d0' },
+      { id: 'fl_grass', name: '草地', icon: '🌿', price: 120, wallBg: '#c8e6c9', floorBg: '#4CAF50' },
+      { id: 'fl_ocean', name: '海洋', icon: '🌊', price: 160, wallBg: '#b3e5fc', floorBg: '#0288d1' },
+      { id: 'fl_cloud', name: '云朵天空', icon: '☁️', price: 130, wallBg: '#e3f2fd', floorBg: '#bbdefb' },
+      { id: 'fl_sunset', name: '晚霞', icon: '🌅', price: 160, wallBg: '#ff8a65', floorBg: '#d84315' },
+      { id: 'fl_candy', name: '糖果屋', icon: '🍬', price: 130, wallBg: '#f8bbd0', floorBg: '#f48fb1' },
+      { id: 'fl_space', name: '太空', icon: '🪐', price: 200, wallBg: '#1a0033', floorBg: '#0d001a' }
     ]
   },
   special: {
     label: '特殊装饰', icon: '✨', zone: 'special',
     items: [
-      { id: 's_tree', name: '圣诞树', icon: '🎄', price: 50, pos: { right:'3%', bottom:'8%', size:'36px' } },
-      { id: 's_balloon', name: '气球', icon: '🎈', price: 40, pos: { left:'8%', top:'5%', size:'30px' } },
-      { id: 's_lights', name: '彩灯', icon: '🎆', price: 45, pos: { left:'50%', top:'2%', size:'28px' } },
-      { id: 's_fountain', name: '喷泉', icon: '⛲', price: 60, pos: { left:'42%', bottom:'3%', size:'32px' } },
-      { id: 's_flower', name: '花园', icon: '🌸', price: 40, pos: { left:'3%', bottom:'5%', size:'28px' } },
-      { id: 's_rocket', name: '火箭', icon: '🚀', price: 55, pos: { right:'8%', top:'3%', size:'30px' } },
-      { id: 's_rainbow', name: '彩虹桥', icon: '🌈', price: 50, pos: { left:'30%', top:'0%', size:'34px' } },
-      { id: 's_trophy', name: '奖杯', icon: '🏆', price: 45, pos: { right:'30%', bottom:'60%', size:'26px' } },
-      { id: 's_castle', name: '小城堡', icon: '🏰', price: 60, pos: { right:'3%', bottom:'55%', size:'34px' } },
-      { id: 's_ferris', name: '摩天轮', icon: '🎡', price: 55, pos: { left:'3%', bottom:'50%', size:'34px' } },
+      { id: 's_tree', name: '圣诞树', icon: '🎄', price: 200, pos: { right:'3%', bottom:'8%', size:'36px' } },
+      { id: 's_balloon', name: '气球', icon: '🎈', price: 160, pos: { left:'8%', top:'5%', size:'30px' } },
+      { id: 's_lights', name: '彩灯', icon: '🎆', price: 180, pos: { left:'50%', top:'2%', size:'28px' } },
+      { id: 's_fountain', name: '喷泉', icon: '⛲', price: 240, pos: { left:'42%', bottom:'3%', size:'32px' } },
+      { id: 's_flower', name: '花园', icon: '🌸', price: 160, pos: { left:'3%', bottom:'5%', size:'28px' } },
+      { id: 's_rocket', name: '火箭', icon: '🚀', price: 220, pos: { right:'8%', top:'3%', size:'30px' } },
+      { id: 's_rainbow', name: '彩虹桥', icon: '🌈', price: 200, pos: { left:'30%', top:'0%', size:'34px' } },
+      { id: 's_trophy', name: '奖杯', icon: '🏆', price: 180, pos: { right:'30%', bottom:'60%', size:'26px' } },
+      { id: 's_castle', name: '小城堡', icon: '🏰', price: 240, pos: { right:'3%', bottom:'55%', size:'34px' } },
+      { id: 's_ferris', name: '摩天轮', icon: '🎡', price: 220, pos: { left:'3%', bottom:'50%', size:'34px' } },
       // BOSS 专属奖励（不在商店出售，bossOnly）
       { id: 'br_b5', name: '黄金王冠', icon: '👑', price: 0, bossOnly: true, pos: { left:'45%', bottom:'25%', size:'40px' } }
     ]
@@ -90,28 +110,35 @@ const SHOP_ITEMS = {
   pet: {
     label: '宠物', icon: '🐾', zone: 'pet',
     items: [
-      { id: 'p_dog', name: '小狗', icon: '🐕', price: 60, gif: 'gifs/dog.gif', voice: 'dog' },
-      { id: 'p_cat', name: '小猫', icon: '🐈', price: 60, gif: 'gifs/cat.gif', voice: 'cat' },
-      { id: 'p_rabbit', name: '兔子', icon: '🐰', price: 50, gif: 'gifs/rabbit.gif', voice: 'rabbit' },
-      { id: 'p_hamster', name: '仓鼠', icon: '🐹', price: 45, gif: 'gifs/hamster.gif', voice: 'hamster' },
-      { id: 'p_bird', name: '小鸟', icon: '🐦', price: 50, gif: 'gifs/bird.gif', voice: 'bird' },
-      { id: 'p_fish', name: '金鱼', icon: '🐟', price: 40, gif: 'gifs/gold_fish.gif', aquatic: true, voice: 'fish' },
-      { id: 'p_panda', name: '熊猫', icon: '🐼', price: 70, gif: 'gifs/panada.gif', voice: 'panda' },
-      { id: 'p_dragon', name: '小恐龙', icon: '🦖', price: 80, gif: 'gifs/Tyrannosaurus_rex.gif', voice: 'dragon' },
-      { id: 'p_unicorn', name: '独角兽', icon: '🦄', price: 80, gif: 'gifs/unicorn.gif', voice: 'unicorn' },
-      { id: 'p_whale', name: '抹香鲸', icon: '🐋', price: 70, gif: 'gifs/whale.gif', aquatic: true, voice: 'whale' },
-      { id: 'p_shark', name: '鲨鱼宝宝', icon: '🦈', price: 65, gif: 'gifs/shark.gif', aquatic: true, voice: 'shark' }
+      // 普通宠物（200 钱）— 常见动物
+      { id: 'p_dog',     name: '小狗',     icon: '🐕', price: 200, tier: 'common', gif: 'gifs/dog.gif',     voice: 'dog' },
+      { id: 'p_cat',     name: '小猫',     icon: '🐈', price: 200, tier: 'common', gif: 'gifs/cat.gif',     voice: 'cat' },
+      { id: 'p_rabbit',  name: '兔子',     icon: '🐰', price: 200, tier: 'common', gif: 'gifs/rabbit.gif',  voice: 'rabbit' },
+      { id: 'p_hamster', name: '仓鼠',     icon: '🐹', price: 200, tier: 'common', gif: 'gifs/hamster.gif', voice: 'hamster' },
+      { id: 'p_bird',    name: '小鸟',     icon: '🐦', price: 200, tier: 'common', gif: 'gifs/bird.gif',    voice: 'bird' },
+      { id: 'p_fish',    name: '金鱼',     icon: '🐟', price: 200, tier: 'common', gif: 'gifs/gold_fish.gif', aquatic: true, voice: 'fish' },
+      { id: 'p_panda',   name: '熊猫',     icon: '🐼', price: 200, tier: 'common', gif: 'gifs/panada.gif',  voice: 'panda' },
+      // 稀有宠物（400 钱）— 奇幻/异国
+      { id: 'p_dragon',  name: '小恐龙',   icon: '🦖', price: 400, tier: 'rare',   gif: 'gifs/Tyrannosaurus_rex.gif', voice: 'dragon' },
+      { id: 'p_unicorn', name: '独角兽',   icon: '🦄', price: 400, tier: 'rare',   gif: 'gifs/unicorn.gif',  voice: 'unicorn' },
+      { id: 'p_whale',   name: '抹香鲸',   icon: '🐋', price: 400, tier: 'rare',   gif: 'gifs/whale.gif',    aquatic: true, voice: 'whale' },
+      { id: 'p_shark',   name: '鲨鱼宝宝', icon: '🦈', price: 400, tier: 'rare',   gif: 'gifs/shark.gif',    aquatic: true, voice: 'shark' }
     ]
   },
   music: {
     label: '音乐', icon: '🎵', zone: 'music',
     items: [
-      { id: 'bgm_happy',     name: '欢乐曲', icon: '😄', price: 30, file: 'music/happy.mp3' },
-      { id: 'bgm_adventure', name: '冒险曲', icon: '⚔️', price: 40, file: 'music/adventure.mp3' },
-      { id: 'bgm_lullaby',   name: '摇篮曲', icon: '🌙', price: 30, file: 'music/lullaby.mp3' },
-      { id: 'bgm_hero',      name: '英雄曲', icon: '🦸', price: 50, file: 'music/hero.mp3' },
-      { id: 'bgm_magic',     name: '魔法曲', icon: '✨', price: 40, file: 'music/magic.mp3' }
+      { id: 'bgm_happy',     name: '欢乐曲', icon: '😄', price: 120, file: 'music/happy.mp3' },
+      { id: 'bgm_adventure', name: '冒险曲', icon: '⚔️', price: 160, file: 'music/adventure.mp3' },
+      { id: 'bgm_lullaby',   name: '摇篮曲', icon: '🌙', price: 120, file: 'music/lullaby.mp3' },
+      { id: 'bgm_hero',      name: '英雄曲', icon: '🦸', price: 200, file: 'music/hero.mp3' },
+      { id: 'bgm_magic',     name: '魔法曲', icon: '✨', price: 160, file: 'music/magic.mp3' }
     ]
+  },
+  // 心愿商店占位：tab 入口用，items 由 this.data.wishShop.items 动态提供
+  wish: {
+    label: '心愿', icon: '💝', zone: 'wish',
+    items: []
   }
 };
 
@@ -825,8 +852,6 @@ const AUTH_ERR_MSG = {
 const app = {
   data: null,
   currentPage: 'home',
-  pinBuffer: '',
-  pinCallback: null,
   pendingBuyItem: null,
   shopCategory: 'furniture',
   battleAnimating: false,
@@ -944,8 +969,7 @@ const app = {
         bossTrophies: []
       },
       music: { owned: [], current: null, enabled: true },
-      taskHistory: [],
-      parentPin: null
+      taskHistory: []
     };
   },
 
@@ -970,12 +994,15 @@ const app = {
   },
 
   // ---- 宠物培养数据 ----
+  // 每个动作消耗的钱
+  PET_ACTION_COST: 4,
+
   initPetStatus(charId, petId) {
     if (!this.data.petStatus[charId]) this.data.petStatus[charId] = {};
     this.data.petStatus[charId][petId] = {
-      meat: 80, veg: 80, rice: 80, clean: 80, happy: 80,
+      hunger: 80, clean: 80, happy: 80,
       lastUpdate: this.getToday(),
-      todayActions: { feedMeat: 0, feedVeg: 0, feedRice: 0, bath: 0, play: 0 },
+      todayActions: { feed: 0, bath: 0, play: 0 },
       lastActionDate: this.getToday()
     };
   },
@@ -986,9 +1013,9 @@ const app = {
       const statuses = this.data.petStatus[charId] || {};
       for (const petId of Object.keys(statuses)) {
         const s = statuses[petId];
-        // 重置每日免费次数
+        // 重置每日次数
         if (s.lastActionDate !== today) {
-          s.todayActions = { feedMeat: 0, feedVeg: 0, feedRice: 0, bath: 0, play: 0 };
+          s.todayActions = { feed: 0, bath: 0, play: 0 };
           s.lastActionDate = today;
         }
         // 按天数衰减
@@ -996,11 +1023,9 @@ const app = {
           const diff = Math.floor((new Date(today) - new Date(s.lastUpdate)) / 86400000);
           if (diff > 0) {
             const decay = diff * 20;
-            s.meat = Math.max(0, (s.meat || 0) - decay);
-            s.veg  = Math.max(0, (s.veg  || 0) - decay);
-            s.rice = Math.max(0, (s.rice || 0) - decay);
-            s.clean = Math.max(0, s.clean - decay);
-            s.happy = Math.max(0, s.happy - decay);
+            s.hunger = Math.max(0, (s.hunger || 0) - decay);
+            s.clean  = Math.max(0, (s.clean  || 0) - decay);
+            s.happy  = Math.max(0, (s.happy  || 0) - decay);
             s.lastUpdate = today;
           }
         }
@@ -1012,13 +1037,19 @@ const app = {
   getPetMood(charId, petId) {
     const s = this.data.petStatus[charId]?.[petId];
     if (!s) return 'normal';
-    const meat = s.meat ?? s.hunger ?? 0;
-    const veg  = s.veg  ?? s.hunger ?? 0;
-    const rice = s.rice ?? s.hunger ?? 0;
-    const min = Math.min(meat, veg, rice, s.clean, s.happy);
+    const min = Math.min(s.hunger || 0, s.clean || 0, s.happy || 0);
     if (min >= 70) return 'happy';
     if (min < 30) return 'sad';
     return 'normal';
+  },
+
+  // 当天三项照顾全部完成，宠物才能辅助打怪
+  hasFullCareToday(charId, petId) {
+    const s = this.data.petStatus[charId]?.[petId];
+    if (!s) return false;
+    if (s.lastActionDate !== this.getToday()) return false;
+    const a = s.todayActions || {};
+    return (a.feed || 0) >= 1 && (a.bath || 0) >= 1 && (a.play || 0) >= 1;
   },
 
   saveData() {
@@ -1072,23 +1103,49 @@ const app = {
           this.initPetStatus(charId, petId);
         }
       }
-      // 宠物状态 todayActions 字段迁移：feed → feedMeat/feedVeg/feedRice
+      // v29 宠物属性精简：5 字段 (meat/veg/rice/clean/happy) → 3 字段 (hunger/clean/happy)
+      // 检测到旧结构则整体重置宠物属性
       for (const petId of Object.keys(this.data.petStatus[charId])) {
         const s = this.data.petStatus[charId][petId];
-        if (s.todayActions && s.todayActions.feedMeat === undefined) {
-          s.todayActions = { feedMeat: 0, feedVeg: 0, feedRice: 0, bath: s.todayActions.bath || 0, play: s.todayActions.play || 0 };
-        }
-        // 单一 hunger → meat/veg/rice 拆分
-        if (s.meat === undefined) {
-          const h = s.hunger !== undefined ? s.hunger : 80;
-          s.meat = h;
-          s.veg = h;
-          s.rice = h;
-          delete s.hunger;
+        const isLegacy = s.meat !== undefined || s.veg !== undefined || s.rice !== undefined
+          || (s.todayActions && (s.todayActions.feedMeat !== undefined || s.todayActions.feedVeg !== undefined || s.todayActions.feedRice !== undefined));
+        if (isLegacy) {
+          this.data.petStatus[charId][petId] = {
+            hunger: 80, clean: 80, happy: 80,
+            lastUpdate: this.getToday(),
+            todayActions: { feed: 0, bath: 0, play: 0 },
+            lastActionDate: this.getToday()
+          };
         }
       }
     }
-    if (!this.data.taskConfig) this.data.taskConfig = { overrides: {}, custom: [] };
+    // 宠物位上限：默认初始 2 个位
+    if (!this.data.petSlots) this.data.petSlots = { unlockedCount: 2 };
+    if (typeof this.data.petSlots.unlockedCount !== 'number') this.data.petSlots.unlockedCount = 2;
+    // 宠物乐园：默认空（按角色分）
+    if (!this.data.petPark) {
+      this.data.petPark = {};
+      for (const k of Object.keys(CHARACTERS)) this.data.petPark[k] = [];
+    }
+    for (const k of Object.keys(CHARACTERS)) {
+      if (!Array.isArray(this.data.petPark[k])) this.data.petPark[k] = [];
+    }
+    // 老用户超过 4 只宠物时，把多余的尾部迁到乐园
+    for (const charId of Object.keys(CHARACTERS)) {
+      const h = this.data.houses[charId];
+      if (h && h.pets && h.pets.length > 4) {
+        const overflow = h.pets.slice(4);
+        h.pets = h.pets.slice(0, 4);
+        this.data.petPark[charId].push(...overflow);
+      }
+    }
+    if (!this.data.taskConfig) this.data.taskConfig = { overrides: {}, custom: [], order: {} };
+    if (!this.data.taskConfig.order) this.data.taskConfig.order = {};
+    // 老的 custom 任务没有 category 字段，默认归到"特别奖励"
+    (this.data.taskConfig.custom || []).forEach(t => { if (!t.category) t.category = 'special'; });
+    // 心愿商店
+    if (!this.data.wishShop) this.data.wishShop = { items: [] };
+    if (!Array.isArray(this.data.wishShop.items)) this.data.wishShop.items = [];
   },
 
   // ---- 任务配置 ----
@@ -1103,7 +1160,31 @@ const app = {
       const o = overrides[t.id];
       return o && o.points !== undefined ? { ...t, points: o.points } : t;
     });
-    return [...builtIn, ...custom.filter(t => t.enabled !== false)];
+    const customActive = custom.filter(t => t.enabled !== false).map(t => ({
+      ...t,
+      category: t.category || 'special'
+    }));
+    return [...builtIn, ...customActive];
+  },
+
+  // 按分类分组返回，每组按 taskConfig.order[cat] 排序（缺省按数组原始顺序）
+  getActiveTasksByCategory() {
+    const tasks = this.getActiveTasks();
+    const order = (this.data.taskConfig && this.data.taskConfig.order) || {};
+    const groups = { basic: [], growth: [], special: [], penalty: [] };
+    tasks.forEach(t => {
+      const c = t.category || 'special';
+      (groups[c] || groups.special).push(t);
+    });
+    for (const cat of Object.keys(groups)) {
+      const ord = order[cat] || [];
+      const indexOf = id => {
+        const i = ord.indexOf(id);
+        return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+      };
+      groups[cat].sort((a, b) => indexOf(a.id) - indexOf(b.id));
+    }
+    return groups;
   },
 
   // ---- 云同步 ----
@@ -1616,15 +1697,12 @@ const app = {
 
   // ---- 页面导航 ----
   goToPage(page) {
-    if (page === 'task') {
-      this.requirePin(() => { this.showPage('task'); this.renderTasks(); });
-      return;
-    }
     this.showPage(page);
     if (page === 'home') this.renderHome();
     if (page === 'house') this.renderHouse();
     if (page === 'shop') this.renderShop();
     if (page === 'battle') this.renderBattle();
+    if (page === 'task') this.renderTasks();
     if (page === 'pet') this.renderPetNurture(this.currentNurturePetId);
   },
 
@@ -1637,7 +1715,7 @@ const app = {
     if (page !== 'house' && this.petRoamTimer) { clearInterval(this.petRoamTimer); this.petRoamTimer = null; }
   },
 
-  // ---- 积分 ----
+  // ---- 钱 ----
   updateAllPoints() {
     const pts = this.data.points;
     document.querySelectorAll('.pts-val').forEach(el => { el.textContent = pts; });
@@ -1673,55 +1751,32 @@ const app = {
     document.getElementById('home-character-name').textContent = char.name + ' · ' + char.desc;
   },
 
-  // ---- 密码 ----
-  requirePin(callback) {
-    if (!this.data.parentPin) {
-      document.getElementById('pin-title').textContent = '请设置家长密码（4位数字）';
-      this.pinCallback = (pin) => { this.data.parentPin = pin; this.saveData(); callback(); };
-    } else {
-      document.getElementById('pin-title').textContent = '请输入家长密码';
-      this.pinCallback = (pin) => {
-        if (pin === this.data.parentPin) { callback(); }
-        else {
-          const d = document.getElementById('pin-display');
-          d.classList.add('pin-error');
-          setTimeout(() => { d.classList.remove('pin-error'); this.pinBuffer = ''; this.updatePinDots(); }, 400);
-          return false;
-        }
-      };
-    }
-    this.pinBuffer = '';
-    this.updatePinDots();
-    document.getElementById('pin-modal').classList.add('show');
-  },
-  pinInput(n) {
-    if (this.pinBuffer.length >= 4) return;
-    this.pinBuffer += n;
-    this.updatePinDots();
-    if (this.pinBuffer.length === 4) {
-      setTimeout(() => { if (this.pinCallback(this.pinBuffer) !== false) this.closePin(); }, 200);
-    }
-  },
-  pinDelete() { this.pinBuffer = this.pinBuffer.slice(0, -1); this.updatePinDots(); },
-  updatePinDots() {
-    document.querySelectorAll('#pin-display .pin-dot').forEach((d, i) => {
-      d.classList.toggle('filled', i < this.pinBuffer.length);
-    });
-  },
-  closePin() { document.getElementById('pin-modal').classList.remove('show'); this.pinBuffer = ''; this.pinCallback = null; },
-
   // ---- 任务 ----
   renderTasks() {
     const today = new Date().toISOString().slice(0, 10);
     const todayDone = this.data.taskHistory.filter(t => t.date === today);
-    document.getElementById('task-list').innerHTML = this.getActiveTasks().map(task => {
-      const isPenalty = task.points < 0;
-      return `<div class="task-item ${isPenalty ? 'task-penalty' : ''}">
-        <div class="task-icon">${task.icon}</div>
-        <div class="task-info"><div class="task-name">${task.name}</div><div class="task-reward ${isPenalty ? 'penalty' : ''}">${isPenalty ? '' : '&#9733; +'}${task.points} 积分</div></div>
-        <button class="task-done-btn ${isPenalty ? 'task-penalty-btn' : ''}" onclick="app.completeTask('${task.id}',event)">${isPenalty ? '&#10007;' : '&#10003;'}</button>
+    const groups = this.getActiveTasksByCategory();
+    const html = TASK_CATEGORY_ORDER.map(cat => {
+      const tasks = groups[cat];
+      if (!tasks || tasks.length === 0) return '';
+      const meta = TASK_CATEGORIES[cat];
+      const itemsHTML = tasks.map(task => {
+        const isPenalty = task.points < 0;
+        return `<div class="task-item ${isPenalty ? 'task-penalty' : ''}">
+          <div class="task-icon">${task.icon}</div>
+          <div class="task-info"><div class="task-name">${task.name}</div><div class="task-reward ${isPenalty ? 'penalty' : ''}">${isPenalty ? '' : '&#9733; +'}${task.points} 钱</div></div>
+          <button class="task-done-btn ${isPenalty ? 'task-penalty-btn' : ''}" onclick="app.completeTask('${task.id}',event)">${isPenalty ? '&#10007;' : '&#10003;'}</button>
+        </div>`;
+      }).join('');
+      return `<div class="task-group task-group-${cat}">
+        <div class="task-group-header">
+          <span class="task-group-label">${meta.label}</span>
+          <span class="task-group-desc">${meta.desc}</span>
+        </div>
+        ${itemsHTML}
       </div>`;
     }).join('');
+    document.getElementById('task-list').innerHTML = html;
     const tl = document.getElementById('today-list');
     tl.innerHTML = todayDone.length === 0 ? '<div class="today-empty">今天还没有完成任务哦~</div>'
       : todayDone.map(t => `<div class="today-item"><span class="check">&#10003;</span><span>${t.task}</span><span style="margin-left:auto;color:#B8860B">+${t.points}</span></div>`).join('');
@@ -1731,7 +1786,7 @@ const app = {
     if (!task) return;
     if (task.points < 0) {
       // 扣分：不低于0
-      if (this.data.points <= 0) { this.showToast('积分已经是0了'); return; }
+      if (this.data.points <= 0) { this.showToast('钱已经是0了'); return; }
       const actual = Math.max(task.points, -this.data.points);
       this.data.points += actual;
       this.data.taskHistory.push({ task: task.name, points: actual, date: new Date().toISOString().slice(0, 10) });
@@ -1748,40 +1803,61 @@ const app = {
   },
 
   // ---- 任务管理 ----
-  manageTasksPin() {
-    this.requirePin(() => this.showTaskManager());
-  },
-
   showTaskManager() {
-    const cfg = this.data.taskConfig || { overrides: {}, custom: [] };
+    const cfg = this.data.taskConfig || { overrides: {}, custom: [], order: {} };
     const overrides = cfg.overrides || {};
-    const custom = cfg.custom || [];
+    const groups = this.getActiveTasksByCategory();
+    // 同时把已禁用的内置任务也显示出来（用于重新启用）
+    const allByCat = { basic: [], growth: [], special: [], penalty: [] };
+    TASKS.forEach(t => allByCat[t.category].push({ ...t, _builtin: true }));
+    (cfg.custom || []).forEach(t => {
+      const cat = t.category || 'special';
+      allByCat[cat].push({ ...t, _builtin: false });
+    });
+    // 应用顺序
+    const order = cfg.order || {};
+    for (const cat of Object.keys(allByCat)) {
+      const ord = order[cat] || [];
+      const idx = id => { const i = ord.indexOf(id); return i === -1 ? Number.MAX_SAFE_INTEGER : i; };
+      allByCat[cat].sort((a, b) => idx(a.id) - idx(b.id));
+    }
     const emojis = ['💧','🎵','🎨','🏊','🧮','✏️','🍎','🚿','💊','🙏','🧹','🎯','🌳','📝','🎶','🤝','🧘','🍳','👟','🎮'];
 
-    let html = '<div class="task-mgr-section"><h4>内置任务</h4>';
-    html += TASKS.map(t => {
-      const o = overrides[t.id] || {};
-      const enabled = o.enabled !== false;
-      const pts = o.points !== undefined ? o.points : t.points;
-      return `<div class="task-mgr-row">
-        <span class="task-mgr-icon">${t.icon}</span>
-        <span class="task-mgr-name">${t.name}</span>
-        <input type="number" class="task-mgr-pts" value="${pts}" onchange="app.updateTaskPoints('${t.id}',this.value)">
-        <button class="task-mgr-toggle ${enabled ? 'on' : 'off'}" onclick="app.toggleTask('${t.id}')">${enabled ? '开' : '关'}</button>
-      </div>`;
-    }).join('');
-    html += '</div>';
-
-    if (custom.length > 0) {
-      html += '<div class="task-mgr-section"><h4>自定义任务</h4>';
-      html += custom.map(t => {
-        return `<div class="task-mgr-row">
-          <span class="task-mgr-icon">${t.icon}</span>
-          <span class="task-mgr-name">${t.name}</span>
-          <input type="number" class="task-mgr-pts" value="${t.points}" onchange="app.updateCustomTaskPoints('${t.id}',this.value)">
-          <button class="task-mgr-del" onclick="app.removeCustomTask('${t.id}')">✕</button>
-        </div>`;
-      }).join('');
+    let html = '';
+    for (const cat of TASK_CATEGORY_ORDER) {
+      const meta = TASK_CATEGORIES[cat];
+      const items = allByCat[cat];
+      html += `<div class="task-mgr-section task-mgr-section-${cat}"><h4>${meta.label}</h4>`;
+      if (items.length === 0) {
+        html += '<div class="task-mgr-empty">这个分类还没有任务</div>';
+      } else {
+        html += items.map((t, i) => {
+          const isFirst = i === 0;
+          const isLast = i === items.length - 1;
+          if (t._builtin) {
+            const o = overrides[t.id] || {};
+            const enabled = o.enabled !== false;
+            const pts = o.points !== undefined ? o.points : t.points;
+            return `<div class="task-mgr-row">
+              <span class="task-mgr-icon">${t.icon}</span>
+              <span class="task-mgr-name">${t.name}</span>
+              <button class="task-mgr-move" onclick="app.moveTask('${t.id}','up')" ${isFirst ? 'disabled' : ''}>↑</button>
+              <button class="task-mgr-move" onclick="app.moveTask('${t.id}','down')" ${isLast ? 'disabled' : ''}>↓</button>
+              <input type="number" class="task-mgr-pts" value="${pts}" onchange="app.updateTaskPoints('${t.id}',this.value)">
+              <button class="task-mgr-toggle ${enabled ? 'on' : 'off'}" onclick="app.toggleTask('${t.id}')">${enabled ? '开' : '关'}</button>
+            </div>`;
+          } else {
+            return `<div class="task-mgr-row">
+              <span class="task-mgr-icon">${t.icon}</span>
+              <span class="task-mgr-name">${t.name}</span>
+              <button class="task-mgr-move" onclick="app.moveTask('${t.id}','up')" ${isFirst ? 'disabled' : ''}>↑</button>
+              <button class="task-mgr-move" onclick="app.moveTask('${t.id}','down')" ${isLast ? 'disabled' : ''}>↓</button>
+              <input type="number" class="task-mgr-pts" value="${t.points}" onchange="app.updateCustomTaskPoints('${t.id}',this.value)">
+              <button class="task-mgr-del" onclick="app.removeCustomTask('${t.id}')">✕</button>
+            </div>`;
+          }
+        }).join('');
+      }
       html += '</div>';
     }
 
@@ -1792,9 +1868,18 @@ const app = {
       </div>
       <div class="task-mgr-add-row">
         <span class="task-mgr-icon" id="new-task-emoji">❓</span>
-        <input type="text" id="new-task-name" class="task-mgr-input" placeholder="任务名称" maxlength="10">
+        <input type="text" id="new-task-name" class="task-mgr-input" placeholder="任务名称" maxlength="12">
         <input type="number" id="new-task-pts" class="task-mgr-pts" value="5" min="-20" max="50">
-        <button class="task-mgr-add-btn" onclick="app.addCustomTask()">+</button>
+      </div>
+      <div class="task-mgr-add-row task-mgr-cat-row">
+        <span class="task-mgr-cat-label">分类：</span>
+        <select id="new-task-cat" class="task-mgr-cat-sel">
+          <option value="basic">基础任务</option>
+          <option value="growth">成长任务</option>
+          <option value="special" selected>特别奖励</option>
+          <option value="penalty">扣分项</option>
+        </select>
+        <button class="task-mgr-add-btn" onclick="app.addCustomTask()">+ 添加</button>
       </div>
     </div>`;
 
@@ -1834,16 +1919,50 @@ const app = {
     const name = document.getElementById('new-task-name').value.trim();
     const icon = document.getElementById('new-task-emoji').textContent;
     const pts = parseInt(document.getElementById('new-task-pts').value) || 5;
+    const category = document.getElementById('new-task-cat').value || 'special';
     if (!name) { this.showToast('请输入任务名称'); return; }
     if (icon === '❓') { this.showToast('请选择一个图标'); return; }
     const id = 'custom_' + Date.now();
-    this.data.taskConfig.custom.push({ id, name, icon, points: pts });
+    this.data.taskConfig.custom.push({ id, name, icon, points: pts, category });
     this.saveData();
     this.showTaskManager();
   },
 
   removeCustomTask(id) {
     this.data.taskConfig.custom = this.data.taskConfig.custom.filter(t => t.id !== id);
+    // 同步从 order 中清掉
+    const order = this.data.taskConfig.order || {};
+    for (const cat of Object.keys(order)) {
+      order[cat] = (order[cat] || []).filter(x => x !== id);
+    }
+    this.saveData();
+    this.showTaskManager();
+  },
+
+  // 在分类内上/下移动任务
+  moveTask(id, dir) {
+    // 找到任务及其分类
+    const builtin = TASKS.find(t => t.id === id);
+    const customT = (this.data.taskConfig.custom || []).find(t => t.id === id);
+    const cat = builtin ? builtin.category : (customT ? (customT.category || 'special') : null);
+    if (!cat) return;
+    if (!this.data.taskConfig.order) this.data.taskConfig.order = {};
+    // 按当前展示顺序构造一个完整的 id 列表
+    const items = [];
+    TASKS.filter(t => t.category === cat).forEach(t => items.push(t.id));
+    (this.data.taskConfig.custom || []).forEach(t => {
+      if ((t.category || 'special') === cat) items.push(t.id);
+    });
+    // 应用现有 order
+    const ord = this.data.taskConfig.order[cat] || [];
+    const idx = x => { const i = ord.indexOf(x); return i === -1 ? Number.MAX_SAFE_INTEGER : i; };
+    items.sort((a, b) => idx(a) - idx(b));
+    const i = items.indexOf(id);
+    if (i === -1) return;
+    const j = dir === 'up' ? i - 1 : i + 1;
+    if (j < 0 || j >= items.length) return;
+    [items[i], items[j]] = [items[j], items[i]];
+    this.data.taskConfig.order[cat] = items;
     this.saveData();
     this.showTaskManager();
   },
@@ -1973,6 +2092,12 @@ const app = {
               onclick="app.switchShopTab('${key}')">${cat.icon} ${cat.label}</button>
     `).join('');
 
+    // 心愿商店走专门的渲染路径
+    if (this.shopCategory === 'wish') {
+      this.renderWishShop();
+      return;
+    }
+
     const grid = document.getElementById('shop-grid');
     const items = SHOP_ITEMS[this.shopCategory].items.filter(i => !i.bossOnly);
     const charId = this.data.currentCharacter;
@@ -1986,7 +2111,14 @@ const app = {
     let notice = '';
     if (this.shopCategory === 'pet') {
       const petCount = (house.pets || []).length;
-      notice = `<div class="shop-notice">${char.name}已有 ${petCount} 只宠物</div>`;
+      const slots = (this.data.petSlots && this.data.petSlots.unlockedCount) || 2;
+      const parkCount = (this.data.petPark && this.data.petPark[charId] && this.data.petPark[charId].length) || 0;
+      notice = `<div class="shop-notice">${char.name}的家：${petCount} / ${slots} 只宠物` +
+               (parkCount > 0 ? ` · 乐园里 ${parkCount} 只` : '') + `</div>`;
+      if (slots < 4) {
+        const nextCost = slots === 2 ? 300 : 800;
+        notice += `<button class="pet-slot-unlock-btn" onclick="app.unlockPetSlot()">解锁第 ${slots + 1} 个宠物位（${nextCost} 钱）</button>`;
+      }
     }
     if (this.shopCategory === 'floor') {
       notice = `<div class="shop-notice">购买后立即应用到${char.name}的小屋</div>`;
@@ -2006,7 +2138,11 @@ const app = {
           <div class="shop-item-price">${isPlaying ? '⏸ 停止' : '▶️ 播放'}</div>
         </div>`;
       }
-      return `<div class="shop-item ${owned ? 'owned' : ''}" onclick="app.tryBuy('${item.id}')">
+      const tierBadge = item.tier === 'rare'
+        ? '<span class="shop-tier-badge rare">稀有</span>'
+        : (item.tier === 'common' ? '<span class="shop-tier-badge common">普通</span>' : '');
+      return `<div class="shop-item ${owned ? 'owned' : ''} ${item.tier ? 'tier-' + item.tier : ''}" onclick="app.tryBuy('${item.id}')">
+        ${tierBadge}
         <div class="shop-item-icon">${item.icon}</div>
         <div class="shop-item-name">${item.name}</div>
         <div class="shop-item-price">${owned ? '已拥有' : '&#9733; ' + item.price}</div>
@@ -2015,6 +2151,203 @@ const app = {
   },
 
   switchShopTab(cat) { this.shopCategory = cat; this.renderShop(); },
+
+  // ---- 心愿商店 ----
+  renderWishShop() {
+    const grid = document.getElementById('shop-grid');
+    const items = (this.data.wishShop && this.data.wishShop.items) || [];
+    const visibleItems = items.filter(i => i.status === 'active' || i.status === 'pending');
+    const points = this.data.points || 0;
+
+    let html = `<div class="wish-header">
+      <div class="wish-subtitle">把每天赚到的钱存起来，换一个真正想要的小心愿 💝</div>
+      <button class="wish-mgr-btn" onclick="app.showWishManager()">⚙️ 家长管理</button>
+    </div>`;
+
+    if (visibleItems.length === 0) {
+      html += '<div class="wish-empty">还没有心愿哦~<br>请爸爸妈妈在"家长管理"里添加</div>';
+    } else {
+      html += '<div class="wish-grid">' + visibleItems.map(it => {
+        const icon = it.icon || '🎁';
+        const rmb = it.rmbPrice || 0;
+        const game = it.gamePrice || rmb * WISH_RATE;
+        if (it.status === 'pending') {
+          return `<div class="wish-card wish-pending">
+            <div class="wish-icon">${icon}</div>
+            <div class="wish-name">${this._esc(it.name)}</div>
+            <div class="wish-rmb">参考价 ¥${rmb}</div>
+            <div class="wish-pending-tag">⏳ 等待发放中...</div>
+          </div>`;
+        }
+        const enough = points >= game;
+        return `<div class="wish-card ${enough ? 'wish-ready' : ''}">
+          <div class="wish-icon">${icon}</div>
+          <div class="wish-name">${this._esc(it.name)}</div>
+          <div class="wish-rmb">参考价 ¥${rmb}</div>
+          <div class="wish-game-price">⭐ 需要 ${game} 钱</div>
+          ${enough
+            ? `<button class="wish-redeem-btn" onclick="app.redeemWish('${it.id}')">我要兑换 ✨</button>`
+            : `<div class="wish-short">还差 ${game - points} 钱</div>`}
+        </div>`;
+      }).join('') + '</div>';
+    }
+    grid.innerHTML = html;
+  },
+
+  // 简单 HTML 转义，防止家长输入的心愿名带特殊字符破坏 UI
+  _esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  },
+
+  redeemWish(wishId) {
+    const item = (this.data.wishShop.items || []).find(i => i.id === wishId);
+    if (!item) return;
+    if (item.status !== 'active') return;
+    const cost = item.gamePrice || (item.rmbPrice * WISH_RATE);
+    if (this.data.points < cost) { this.showToast('钱不够哦~'); return; }
+    // 防误点二次确认
+    if (!confirm(`确认兑换"${item.name}"吗？\n将扣除 ${cost} 钱。`)) return;
+    if (this.data.points < cost) { this.showToast('钱不够哦~'); return; }
+    this.data.points -= cost;
+    item.status = 'pending';
+    item.redeemedAt = Date.now();
+    this.saveData();
+    this.updateAllPoints();
+    SFX.play('buy');
+    this.celebrate();
+    this.showToast('兑换成功！爸爸妈妈会帮你准备这个心愿 ✨');
+    this.renderShop();
+  },
+
+  // ---- 心愿商店：家长管理 ----
+  showWishManager() {
+    const items = (this.data.wishShop && this.data.wishShop.items) || [];
+    const active = items.filter(i => i.status === 'active');
+    const pending = items.filter(i => i.status === 'pending');
+    const completed = items.filter(i => i.status === 'completed').slice(-5).reverse();
+    const emojis = ['🎁','🍫','🍬','🍭','🎈','🚀','🎮','🚗','🧸','🎨','📚','🍦','🎪','⚽','🪀','🏰','🦖','🎵','🌟','💫'];
+
+    let html = '<div class="wish-mgr-section"><h4>添加新心愿</h4>';
+    html += `<div class="wish-mgr-add">
+      <div class="task-mgr-emoji-pick">
+        ${emojis.map(e => `<span class="emoji-opt" onclick="app.pickWishIcon('${e}')">${e}</span>`).join('')}
+      </div>
+      <div class="wish-mgr-add-row">
+        <span class="task-mgr-icon" id="new-wish-icon">🎁</span>
+        <input type="text" id="new-wish-name" class="task-mgr-input" placeholder="心愿名称" maxlength="20">
+      </div>
+      <div class="wish-mgr-add-row">
+        <span class="wish-mgr-label">参考价：</span>
+        <input type="number" id="new-wish-rmb" class="wish-mgr-rmb" placeholder="0" min="0" oninput="app.syncWishGamePrice()">
+        <span class="wish-mgr-unit">元</span>
+        <span class="wish-mgr-arrow">→</span>
+        <input type="number" id="new-wish-game" class="wish-mgr-game" placeholder="0" min="0">
+        <span class="wish-mgr-unit">钱</span>
+      </div>
+      <div class="wish-mgr-hint">默认 1 元 = ${WISH_RATE} 钱（可手动改"钱"那一栏覆盖）</div>
+      <button class="task-mgr-add-btn wish-mgr-add-btn" onclick="app.addWishItem()">+ 添加心愿</button>
+    </div>`;
+    html += '</div>';
+
+    html += `<div class="wish-mgr-section"><h4>进行中的心愿（${active.length}）</h4>`;
+    if (active.length === 0) {
+      html += '<div class="task-mgr-empty">还没有上架的心愿</div>';
+    } else {
+      html += active.map(it => `<div class="wish-mgr-row">
+        <span class="task-mgr-icon">${it.icon || '🎁'}</span>
+        <span class="wish-mgr-name">${this._esc(it.name)}</span>
+        <span class="wish-mgr-price">¥${it.rmbPrice} / ⭐${it.gamePrice}</span>
+        <button class="task-mgr-del" onclick="app.delistWishItem('${it.id}')" title="下架">✕</button>
+      </div>`).join('');
+    }
+    html += '</div>';
+
+    html += `<div class="wish-mgr-section"><h4>等待发放（${pending.length}）</h4>`;
+    if (pending.length === 0) {
+      html += '<div class="task-mgr-empty">没有等待发放的心愿</div>';
+    } else {
+      html += pending.map(it => `<div class="wish-mgr-row wish-mgr-pending">
+        <span class="task-mgr-icon">${it.icon || '🎁'}</span>
+        <span class="wish-mgr-name">${this._esc(it.name)}</span>
+        <span class="wish-mgr-price">⭐${it.gamePrice}</span>
+        <button class="wish-mgr-fulfill" onclick="app.fulfillWishItem('${it.id}')">已发放</button>
+      </div>`).join('');
+    }
+    html += '</div>';
+
+    if (completed.length > 0) {
+      html += `<div class="wish-mgr-section"><h4>最近完成（${completed.length}）</h4>`;
+      html += completed.map(it => {
+        const date = it.fulfilledAt ? new Date(it.fulfilledAt).toLocaleDateString() : '';
+        return `<div class="wish-mgr-row wish-mgr-done">
+          <span class="task-mgr-icon">${it.icon || '🎁'}</span>
+          <span class="wish-mgr-name">${this._esc(it.name)}</span>
+          <span class="wish-mgr-date">${date}</span>
+        </div>`;
+      }).join('');
+      html += '</div>';
+    }
+
+    document.getElementById('wish-mgr-content').innerHTML = html;
+    document.getElementById('wish-mgr-modal').classList.add('show');
+  },
+
+  pickWishIcon(emoji) {
+    document.getElementById('new-wish-icon').textContent = emoji;
+  },
+
+  syncWishGamePrice() {
+    const rmb = parseInt(document.getElementById('new-wish-rmb').value) || 0;
+    document.getElementById('new-wish-game').value = rmb * WISH_RATE;
+  },
+
+  addWishItem() {
+    const name = document.getElementById('new-wish-name').value.trim();
+    const icon = document.getElementById('new-wish-icon').textContent;
+    const rmb = parseInt(document.getElementById('new-wish-rmb').value) || 0;
+    let game = parseInt(document.getElementById('new-wish-game').value);
+    if (!name) { this.showToast('请输入心愿名称'); return; }
+    if (rmb <= 0 && (!game || game <= 0)) { this.showToast('请填写价格'); return; }
+    if (!game || game <= 0) game = rmb * WISH_RATE;
+    this.data.wishShop.items.push({
+      id: 'wish_' + Date.now(),
+      name, icon,
+      rmbPrice: rmb,
+      gamePrice: game,
+      status: 'active',
+      createdAt: Date.now(),
+      redeemedAt: null,
+      fulfilledAt: null
+    });
+    this.saveData();
+    this.showWishManager();
+  },
+
+  delistWishItem(id) {
+    if (!confirm('确认下架这个心愿吗？孩子将看不到它。')) return;
+    const it = this.data.wishShop.items.find(x => x.id === id);
+    if (!it) return;
+    it.status = 'delisted';
+    this.saveData();
+    this.showWishManager();
+  },
+
+  fulfillWishItem(id) {
+    const it = this.data.wishShop.items.find(x => x.id === id);
+    if (!it) return;
+    it.status = 'completed';
+    it.fulfilledAt = Date.now();
+    this.saveData();
+    this.showWishManager();
+    if (this.currentPage === 'shop') this.renderShop();
+  },
+
+  closeWishManager() {
+    document.getElementById('wish-mgr-modal').classList.remove('show');
+    if (this.currentPage === 'shop' && this.shopCategory === 'wish') this.renderShop();
+  },
 
   findItem(id) {
     for (const cat of Object.values(SHOP_ITEMS)) {
@@ -2043,6 +2376,20 @@ const app = {
     if (!item) return;
 
     const cat = this.findItemCategory(itemId);
+
+    // 宠物位上限检查
+    if (cat === 'pet') {
+      const charId = this.data.currentCharacter;
+      const house = this.data.houses[charId];
+      const slots = (this.data.petSlots && this.data.petSlots.unlockedCount) || 2;
+      if ((house.pets || []).length >= slots) {
+        const slotMsg = slots < 4
+          ? `家里宠物位满了（${slots}/${slots}）！\n先把一只送去宠物乐园，或解锁第 ${slots + 1} 个宠物位。`
+          : `家里宠物位满了（4/4）！\n先把一只送去宠物乐园再买。`;
+        alert(slotMsg);
+        return;
+      }
+    }
 
     this.pendingBuyItem = item;
     document.getElementById('buy-preview').textContent = item.icon;
@@ -2106,7 +2453,7 @@ const app = {
     const item = this.pendingBuyItem;
     if (!item) return;
     if (this.data.points < item.price) {
-      document.getElementById('buy-name').textContent = '积分不够哦~';
+      document.getElementById('buy-name').textContent = '钱不够哦~';
       document.getElementById('buy-name').style.color = '#FF6B6B';
       setTimeout(() => { document.getElementById('buy-name').style.color = ''; this.closeBuy(); }, 1000);
       return;
@@ -2186,13 +2533,11 @@ const app = {
     const moodTexts = { happy: '很开心！ 😊', normal: '还不错~ 😐', sad: '不太开心... 😢' };
     document.getElementById('pet-mood-text').textContent = pet.name + moodTexts[mood];
 
-    // 状态条
+    // 状态条（3 项）
     document.getElementById('pet-stats').innerHTML = [
-      { icon: '🍖', key: 'meat',  label: '肉',   cls: 'meat' },
-      { icon: '🥬', key: 'veg',   label: '菜',   cls: 'veg' },
-      { icon: '🍚', key: 'rice',  label: '饭',   cls: 'rice' },
-      { icon: '🛁', key: 'clean', label: '清洁', cls: 'clean' },
-      { icon: '🎾', key: 'happy', label: '快乐', cls: 'happy' }
+      { icon: '🍽️', key: 'hunger', label: '饱食', cls: 'meat' },
+      { icon: '🛁', key: 'clean',  label: '清洁', cls: 'clean' },
+      { icon: '🎾', key: 'happy',  label: '快乐', cls: 'happy' }
     ].map(s => `
       <div class="pet-stat-row">
         <span class="pet-stat-icon">${s.icon}</span>
@@ -2203,30 +2548,30 @@ const app = {
       </div>
     `).join('');
 
-    // 操作按钮
+    // 操作按钮（3 项 — 每次都扣 4 钱）
     const today = this.getToday();
     if (status.lastActionDate !== today) {
-      status.todayActions = { feedMeat: 0, feedVeg: 0, feedRice: 0, bath: 0, play: 0 };
+      status.todayActions = { feed: 0, bath: 0, play: 0 };
       status.lastActionDate = today;
       this.saveData();
     }
+    const cost = this.PET_ACTION_COST;
     const actions = [
-      { key: 'feedMeat', icon: '🍖', label: '喂肉', cls: 'pet-action-feed-meat', stat: 'meat' },
-      { key: 'feedVeg',  icon: '🥬', label: '喂菜', cls: 'pet-action-feed-veg',  stat: 'veg' },
-      { key: 'feedRice', icon: '🍚', label: '喂饭', cls: 'pet-action-feed-rice', stat: 'rice' },
-      { key: 'bath',     icon: '🛁', label: '洗澡', cls: 'pet-action-bath',      stat: 'clean' },
-      { key: 'play',     icon: '🎾', label: '玩耍', cls: 'pet-action-play',      stat: 'happy' }
+      { key: 'feed', icon: '🍽️', label: '喂饭', cls: 'pet-action-feed-rice', stat: 'hunger' },
+      { key: 'play', icon: '🎾', label: '陪玩', cls: 'pet-action-play',      stat: 'happy' },
+      { key: 'bath', icon: '🛁', label: '洗澡', cls: 'pet-action-bath',      stat: 'clean' }
     ];
     document.getElementById('pet-nurture-actions').innerHTML = actions.map(a => {
-      const isFree = (status.todayActions[a.key] || 0) < 1;
-      const costText = isFree ? '免费' : '⭐ 5';
+      const used = (status.todayActions[a.key] || 0) >= 1;
       const isMax = (status[a.stat] || 0) >= 100;
-      return `<button class="pet-action-btn ${a.cls} ${isMax ? 'disabled' : ''}"
+      const disabled = used || isMax;
+      const costText = used ? '今日已做' : (isMax ? '已满' : ('⭐ ' + cost));
+      return `<button class="pet-action-btn ${a.cls} ${disabled ? 'disabled' : ''}"
         onclick="app.doPetAction('${petId}', '${a.key}')"
-        ${isMax ? 'disabled' : ''}>
+        ${disabled ? 'disabled' : ''}>
         <span class="action-icon">${a.icon}</span>
         <span>${a.label}</span>
-        <span class="action-cost">${isMax ? '已满' : costText}</span>
+        <span class="action-cost">${costText}</span>
       </button>`;
     }).join('');
   },
@@ -2236,18 +2581,16 @@ const app = {
     const status = this.data.petStatus[charId]?.[petId];
     if (!status) return;
 
-    // 每种动作对应独立的属性条
-    const statMap = { feedMeat: 'meat', feedVeg: 'veg', feedRice: 'rice', bath: 'clean', play: 'happy' };
+    const statMap = { feed: 'hunger', bath: 'clean', play: 'happy' };
     const stat = statMap[action];
     if (!stat) return;
     if ((status[stat] || 0) >= 100) { this.showToast('已经满了哦~'); return; }
+    if ((status.todayActions[action] || 0) >= 1) { this.showToast('今天已经做过啦~'); return; }
 
-    const isFree = (status.todayActions[action] || 0) < 1;
-    if (!isFree && this.data.points < 5) { this.showToast('积分不够哦~'); return; }
+    const cost = this.PET_ACTION_COST;
+    if (this.data.points < cost) { this.showToast('钱不够哦~'); return; }
 
-    if (!isFree) {
-      this.data.points -= 5;
-    }
+    this.data.points -= cost;
     status.todayActions[action] = (status.todayActions[action] || 0) + 1;
     // 每次操作 +30
     status[stat] = Math.min(100, (status[stat] || 0) + 30);
@@ -2255,7 +2598,7 @@ const app = {
     this.saveData();
     this.updateAllPoints();
 
-    // 音效 + 丰富的反馈动画
+    // 音效 + 反馈动画
     SFX.play('feed');
     this.playNurtureAnim(action, petId);
   },
@@ -2266,9 +2609,7 @@ const app = {
     layer.innerHTML = '';
 
     const foodMap = {
-      feedMeat: ['🍖','🍗','🥩','🍖','🍗'],
-      feedVeg:  ['🥬','🥕','🥦','🌽','🥬'],
-      feedRice: ['🍚','🍙','🍱','🍚','🍙']
+      feed: ['🍖','🥬','🍚','🍗','🍙']
     };
     if (foodMap[action]) {
       // 食物从上方掉落，宠物吃东西弹跳
@@ -2356,35 +2697,145 @@ const app = {
     const house = this.data.houses[charId];
     const pets = (house.pets || []).map(id => this.findItem(id)).filter(Boolean);
     const grid = document.getElementById('pet-list-grid');
+    const slots = (this.data.petSlots && this.data.petSlots.unlockedCount) || 2;
+    const parkCount = (this.data.petPark && this.data.petPark[charId] && this.data.petPark[charId].length) || 0;
 
+    let header = `<div class="pet-list-header">
+      <span>家里 ${pets.length} / ${slots} 只</span>
+      <button class="pet-park-btn" onclick="app.showPetPark()">🏞️ 宠物乐园 (${parkCount})</button>
+    </div>`;
+    // 解锁更多宠物位
+    if (slots < 4) {
+      const nextCost = slots === 2 ? 300 : 800;
+      header += `<button class="pet-slot-unlock-btn" onclick="app.unlockPetSlot()">解锁第 ${slots + 1} 个宠物位（${nextCost} 钱）</button>`;
+    }
+
+    let body;
     if (pets.length === 0) {
-      grid.innerHTML = '<div class="pet-empty">还没有宠物哦~<br>去商店买一只吧！</div>';
+      body = '<div class="pet-empty">还没有宠物哦~<br>去商店买一只吧！</div>';
     } else {
-      grid.innerHTML = pets.map(pet => {
+      body = pets.map(pet => {
         const status = this.data.petStatus[charId]?.[pet.id];
         const mood = this.getPetMood(charId, pet.id);
-        const m = status?.meat || 0;
-        const v = status?.veg || 0;
-        const r = status?.rice || 0;
+        const hg = status?.hunger || 0;
         const c = status?.clean || 0;
         const hp = status?.happy || 0;
-        return `<div class="pet-list-card" onclick="app.openPetNurture('${pet.id}')">
-          <div class="pet-list-icon">${pet.icon}</div>
-          <div class="pet-list-info">
-            <div class="pet-list-name">${pet.name}</div>
-            <div class="pet-list-bars">
-              <div class="pet-mini-bar"><div class="pet-mini-bar-fill meat" style="width:${m}%"></div></div>
-              <div class="pet-mini-bar"><div class="pet-mini-bar-fill veg" style="width:${v}%"></div></div>
-              <div class="pet-mini-bar"><div class="pet-mini-bar-fill rice" style="width:${r}%"></div></div>
-              <div class="pet-mini-bar"><div class="pet-mini-bar-fill clean" style="width:${c}%"></div></div>
-              <div class="pet-mini-bar"><div class="pet-mini-bar-fill happy" style="width:${hp}%"></div></div>
+        return `<div class="pet-list-card">
+          <div class="pet-list-main" onclick="app.openPetNurture('${pet.id}')">
+            <div class="pet-list-icon">${pet.icon}</div>
+            <div class="pet-list-info">
+              <div class="pet-list-name">${pet.name}</div>
+              <div class="pet-list-bars">
+                <div class="pet-mini-bar"><div class="pet-mini-bar-fill meat" style="width:${hg}%"></div></div>
+                <div class="pet-mini-bar"><div class="pet-mini-bar-fill clean" style="width:${c}%"></div></div>
+                <div class="pet-mini-bar"><div class="pet-mini-bar-fill happy" style="width:${hp}%"></div></div>
+              </div>
             </div>
+            <div class="pet-list-mood ${mood}"></div>
           </div>
-          <div class="pet-list-mood ${mood}"></div>
+          <button class="pet-send-park-btn" onclick="app.sendPetToPark('${pet.id}')" title="送去宠物乐园">🏞️</button>
         </div>`;
       }).join('');
     }
+    grid.innerHTML = header + body;
     document.getElementById('pet-list-modal').classList.add('show');
+  },
+
+  // ---- 宠物乐园 ----
+  showPetPark() {
+    const charId = this.data.currentCharacter;
+    const parkIds = (this.data.petPark && this.data.petPark[charId]) || [];
+    const grid = document.getElementById('pet-list-grid');
+    const slots = (this.data.petSlots && this.data.petSlots.unlockedCount) || 2;
+    const homeCount = (this.data.houses[charId].pets || []).length;
+
+    let header = `<div class="pet-list-header">
+      <span>乐园里 ${parkIds.length} 只</span>
+      <button class="pet-park-btn" onclick="app.showPetList()">🏠 回到家里</button>
+    </div>`;
+
+    let body;
+    if (parkIds.length === 0) {
+      body = '<div class="pet-empty">乐园里还没有宠物哦~</div>';
+    } else {
+      body = parkIds.map(id => {
+        const pet = this.findItem(id);
+        if (!pet) return '';
+        const canBring = homeCount < slots;
+        return `<div class="pet-list-card">
+          <div class="pet-list-main">
+            <div class="pet-list-icon">${pet.icon}</div>
+            <div class="pet-list-info">
+              <div class="pet-list-name">${pet.name}</div>
+              <div class="pet-list-park-hint">在乐园里玩得很开心~</div>
+            </div>
+          </div>
+          <button class="pet-bring-back-btn ${canBring ? '' : 'disabled'}" onclick="app.bringPetHome('${pet.id}')" ${canBring ? '' : 'disabled'}>
+            ${canBring ? '接回家 ⭐ 20' : '家里满了'}
+          </button>
+        </div>`;
+      }).join('');
+    }
+    grid.innerHTML = header + body;
+    document.getElementById('pet-list-modal').classList.add('show');
+  },
+
+  sendPetToPark(petId) {
+    const charId = this.data.currentCharacter;
+    const house = this.data.houses[charId];
+    const idx = house.pets.indexOf(petId);
+    if (idx === -1) return;
+    house.pets.splice(idx, 1);
+    if (!this.data.petPark[charId]) this.data.petPark[charId] = [];
+    this.data.petPark[charId].push(petId);
+    this.saveData();
+    SFX.play('buy');
+    this.showToast('已送去宠物乐园 🏞️');
+    this.showPetList();
+    if (this.currentPage === 'house') this.renderHouse();
+    if (this.currentPage === 'battle') this.renderBattle();
+  },
+
+  bringPetHome(petId) {
+    const charId = this.data.currentCharacter;
+    const slots = this.data.petSlots.unlockedCount;
+    const house = this.data.houses[charId];
+    if ((house.pets || []).length >= slots) {
+      this.showToast('家里宠物位满了~');
+      return;
+    }
+    if (this.data.points < 20) { this.showToast('钱不够哦~'); return; }
+    const park = this.data.petPark[charId] || [];
+    const idx = park.indexOf(petId);
+    if (idx === -1) return;
+    this.data.points -= 20;
+    park.splice(idx, 1);
+    house.pets.push(petId);
+    // 如果乐园回来的宠物没有 status，初始化一下
+    if (!this.data.petStatus[charId]) this.data.petStatus[charId] = {};
+    if (!this.data.petStatus[charId][petId]) this.initPetStatus(charId, petId);
+    this.saveData();
+    this.updateAllPoints();
+    SFX.play('buy');
+    this.showToast('欢迎回家~');
+    this.showPetPark();
+    if (this.currentPage === 'house') this.renderHouse();
+  },
+
+  unlockPetSlot() {
+    const slots = this.data.petSlots.unlockedCount;
+    if (slots >= 4) return;
+    const cost = slots === 2 ? 300 : 800;
+    if (this.data.points < cost) { this.showToast('钱不够哦~'); return; }
+    if (!confirm(`确认花 ${cost} 钱解锁第 ${slots + 1} 个宠物位？`)) return;
+    this.data.points -= cost;
+    this.data.petSlots.unlockedCount = slots + 1;
+    this.saveData();
+    this.updateAllPoints();
+    SFX.play('buy');
+    this.celebrate();
+    this.showToast(`第 ${slots + 1} 个宠物位已解锁！`);
+    this.showPetList();
   },
 
   closePetList() {
@@ -2535,7 +2986,16 @@ const app = {
   canFreeAttack() { return this.data.battle.lastFreeAttackDate !== this.getToday(); },
 
   canPetAttack(petId) {
-    return this.data.battle.lastPetAttackDates[petId] !== this.getToday();
+    if (this.data.battle.lastPetAttackDates[petId] === this.getToday()) return false;
+    // 必须当天三项照顾全部完成
+    return this.hasFullCareToday(this.data.currentCharacter, petId);
+  },
+
+  // 区分"今日已攻击" vs "未照顾完"，让按钮文案更准确
+  petAttackBlockReason(petId) {
+    if (this.data.battle.lastPetAttackDates[petId] === this.getToday()) return 'used';
+    if (!this.hasFullCareToday(this.data.currentCharacter, petId)) return 'care';
+    return null;
   },
 
   getCurrentPets() {
@@ -2577,11 +3037,11 @@ const app = {
       </button>
       <button class="atk-btn atk-strong" onclick="app.attack('strong')">
         <span class="atk-icon">⚡</span><span class="atk-label">强力攻击</span>
-        <span class="atk-cost">&#9733; 10 积分</span><span class="atk-dmg">伤害 3</span>
+        <span class="atk-cost">&#9733; 10 钱</span><span class="atk-dmg">伤害 3</span>
       </button>
       <button class="atk-btn atk-ultimate" onclick="app.attack('ultimate')">
         <span class="atk-icon">💥</span><span class="atk-label">必杀技</span>
-        <span class="atk-cost">&#9733; 25 积分</span><span class="atk-dmg">伤害 8</span>
+        <span class="atk-cost">&#9733; 25 钱</span><span class="atk-dmg">伤害 8</span>
       </button>`;
     document.getElementById('battle-actions').innerHTML = actionsHTML;
 
@@ -2591,11 +3051,16 @@ const app = {
     if (pets.length === 0) {
       petArea.innerHTML = '<div class="pet-hint">养宠物后，宠物也能帮你打怪兽哦！</div>';
     } else {
-      petArea.innerHTML = '<div class="pet-actions-title">🐾 宠物助攻</div>' + pets.map(pet => {
+      petArea.innerHTML = '<div class="pet-actions-title">🐾 宠物助攻 <span class="pet-actions-hint">（今日喂饭+陪玩+洗澡都做完才能助攻）</span></div>' + pets.map(pet => {
         const canAtk = this.canPetAttack(pet.id);
+        const blockReason = this.petAttackBlockReason(pet.id);
+        let stateLabel;
+        if (canAtk) stateLabel = ' 攻击！';
+        else if (blockReason === 'used') stateLabel = ' (今日已攻击)';
+        else stateLabel = ' (照顾完才能助攻)';
         return `<button class="pet-atk-btn ${canAtk ? '' : 'disabled'}" onclick="app.petAttack('${pet.id}')">
           <span class="pet-atk-icon">${pet.icon}</span>
-          <span class="pet-atk-info">${pet.name}${canAtk ? ' 攻击！' : ' (今日已攻击)'}</span>
+          <span class="pet-atk-info">${pet.name}${stateLabel}</span>
           <span class="pet-atk-dmg">伤害 2</span>
         </button>`;
       }).join('');
@@ -2610,7 +3075,7 @@ const app = {
     if (type === 'normal') { if (!this.canFreeAttack()) return; damage = 1; this.data.battle.lastFreeAttackDate = this.getToday(); }
     else if (type === 'strong') { cost = 10; damage = 3; }
     else if (type === 'ultimate') { cost = 25; damage = 8; }
-    if (cost > 0 && this.data.points < cost) { this.showBattleLog('积分不够哦~', '#FF6B6B'); return; }
+    if (cost > 0 && this.data.points < cost) { this.showBattleLog('钱不够哦~', '#FF6B6B'); return; }
     if (cost > 0) this.data.points -= cost;
     this.doAttackAnim(damage, type === 'ultimate', cost);
     const labels = { normal: '普通攻击', strong: '强力攻击', ultimate: '必杀技' };
@@ -2681,7 +3146,7 @@ const app = {
       this.data.battle.bossTrophies.push({ id: b.id, name: b.name, icon: b.icon, defeatedDate: this.getToday() });
       this.data.battle.currentBoss = null;
       this._justDefeatedBoss = true;
-      // 发奖励：积分
+      // 发奖励：钱
       const reward = b.rewardPoints || 50;
       this.data.points += reward;
       // 发奖励：BOSS 专属装饰加入当前角色的小屋（如已有则跳过，避免重复击败同一 BOSS 时多次添加）
@@ -2705,7 +3170,7 @@ const app = {
       const itemLine = rewardItem
         ? `<br><span style="color:#666;font-size:15px">获得专属装饰：${rewardItem.icon} ${rewardItem.name}</span>`
         : '';
-      textEl.innerHTML = `你打败了 <b>${b.name}</b>！<br><span style="color:#FFB300;font-size:20px;font-weight:800">+${reward} 积分</span>${itemLine}`;
+      textEl.innerHTML = `你打败了 <b>${b.name}</b>！<br><span style="color:#FFB300;font-size:20px;font-weight:800">+${reward} 钱</span>${itemLine}`;
       modal.classList.add('boss-victory');
     } else {
       const m = this.data.battle.currentMonster;
