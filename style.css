@@ -581,6 +581,34 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, "PingFa
 .pet-mode-btn.active .pet-mode-title {
   color: #d35400;
 }
+.currency-name-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.currency-name-row input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.currency-name-row input:focus {
+  border-color: #FF8E53;
+}
+.currency-name-row .btn-small {
+  padding: 8px 10px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.settings-hint {
+  font-size: 12px;
+  color: #999;
+  margin-top: 6px;
+  text-align: left;
+}
 
 /* ============ 商店锁定房间标记 ============ */
 .shop-item.room-locked {

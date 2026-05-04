@@ -202,14 +202,14 @@ const SHOP_ITEMS = {
 };
 
 const MONSTERS = [
-  { id: 'm1', name: '小怪兽', icon: '👾', maxHp: 10 },
-  { id: 'm2', name: '火焰怪', icon: '🔥', maxHp: 10 },
-  { id: 'm3', name: '冰霜怪', icon: '🥶', maxHp: 10 },
-  { id: 'm4', name: '暗影怪', icon: '👿', maxHp: 10 },
-  { id: 'm5', name: '雷电怪', icon: '⚡', maxHp: 10 },
-  { id: 'm6', name: '巨石怪', icon: '🗿', maxHp: 10 },
-  { id: 'm7', name: '毒蘑菇', icon: '🍄', maxHp: 10 },
-  { id: 'm8', name: '幽灵怪', icon: '👻', maxHp: 10 }
+  { id: 'm1', name: '小怪兽', icon: '👾', maxHp: 10, rewardPoints: 15 },
+  { id: 'm2', name: '火焰怪', icon: '🔥', maxHp: 10, rewardPoints: 15 },
+  { id: 'm3', name: '冰霜怪', icon: '🥶', maxHp: 10, rewardPoints: 15 },
+  { id: 'm4', name: '暗影怪', icon: '👿', maxHp: 10, rewardPoints: 15 },
+  { id: 'm5', name: '雷电怪', icon: '⚡', maxHp: 10, rewardPoints: 15 },
+  { id: 'm6', name: '巨石怪', icon: '🗿', maxHp: 10, rewardPoints: 15 },
+  { id: 'm7', name: '毒蘑菇', icon: '🍄', maxHp: 10, rewardPoints: 15 },
+  { id: 'm8', name: '幽灵怪', icon: '👻', maxHp: 10, rewardPoints: 15 }
 ];
 
 const BOSSES = [
@@ -221,7 +221,7 @@ const BOSSES = [
     rewardItem: { id: 'br_b3', name: '龙鳞盾',   icon: '🛡️', zone: 'wall' } },
   { id: 'b4', name: '雷霆魔神',   icon: '⚡👿', maxHp: 50, rewardPoints: 50,
     rewardItem: { id: 'br_b4', name: '雷神锤',   icon: '🔨', zone: 'wall' } },
-  { id: 'b5', name: '终极大魔王', icon: '💀',   maxHp: 50, rewardPoints: 80,
+  { id: 'b5', name: '终极大魔王', icon: '💀',   maxHp: 50, rewardPoints: 100,
     rewardItem: { id: 'br_b5', name: '黄金王冠', icon: '👑', zone: 'special' } }
 ];
 
@@ -976,6 +976,7 @@ const app = {
       this._bootSync = origLastSync;
       this._cloudLoadPending = true;
       this.loadData();
+      this._refreshCurrencyText();
       this.showPage('home');
       this.renderHome();
       this.updateAllPoints();
@@ -991,6 +992,7 @@ const app = {
       }
       this._needMigration = hasExisting;
       this.loadData();  // 仍需 this.data 存在以便注册时可上传
+      this._refreshCurrencyText();
       this.showPage('auth');
       this.switchAuthTab(hasExisting ? 'register' : 'login');
       this.updateMuteButton();
@@ -1239,6 +1241,9 @@ const app = {
     // 全局设置（不分角色）
     if (!this.data.settings) this.data.settings = {};
     if (this.data.settings.petDisplayMode !== 'multiRoom') this.data.settings.petDisplayMode = 'roomBased';
+    if (typeof this.data.settings.currencyName !== 'string' || !this.data.settings.currencyName.trim()) {
+      this.data.settings.currencyName = '奥特曼币';
+    }
     if (!this.data.petStatus) this.data.petStatus = {};
     for (const charId of Object.keys(CHARACTERS)) {
       if (!this.data.petStatus[charId]) this.data.petStatus[charId] = {};
@@ -1459,6 +1464,7 @@ const app = {
         }
         this._cloudEverLoaded = true;   // 登录后 load 成功 → 放开推送闸门
         if (cloudAdopted) {
+          this._refreshCurrencyText();
           this.renderHome();
           this.updateAllPoints();
           this.updateMuteButton();
@@ -1870,7 +1876,16 @@ const app = {
     if (page !== 'house' && this.petRoamTimer) { clearInterval(this.petRoamTimer); this.petRoamTimer = null; }
   },
 
-  // ---- 钱 ----
+  // ---- 货币 ----
+  currencyName() {
+    return (this.data && this.data.settings && this.data.settings.currencyName) || '奥特曼币';
+  },
+
+  _refreshCurrencyText() {
+    const name = this.currencyName();
+    document.querySelectorAll('.cur-name').forEach(el => { el.textContent = name; });
+  },
+
   updateAllPoints() {
     const pts = this.data.points;
     document.querySelectorAll('.pts-val').forEach(el => { el.textContent = pts; });
@@ -1919,7 +1934,7 @@ const app = {
         const isPenalty = task.points < 0;
         return `<div class="task-item ${isPenalty ? 'task-penalty' : ''}">
           <div class="task-icon">${task.icon}</div>
-          <div class="task-info"><div class="task-name">${task.name}</div><div class="task-reward ${isPenalty ? 'penalty' : ''}">${isPenalty ? '' : '&#9733; +'}${task.points} 钱</div></div>
+          <div class="task-info"><div class="task-name">${task.name}</div><div class="task-reward ${isPenalty ? 'penalty' : ''}">${isPenalty ? '' : '&#9733; +'}${task.points} ${this.currencyName()}</div></div>
           <button class="task-done-btn ${isPenalty ? 'task-penalty-btn' : ''}" onclick="app.completeTask('${task.id}',event)">${isPenalty ? '&#10007;' : '&#10003;'}</button>
         </div>`;
       }).join('');
@@ -1941,7 +1956,7 @@ const app = {
     if (!task) return;
     if (task.points < 0) {
       // 扣分：不低于0
-      if (this.data.points <= 0) { this.showToast('钱已经是0了'); return; }
+      if (this.data.points <= 0) { this.showToast(this.currencyName() + '已经是0了'); return; }
       const actual = Math.max(task.points, -this.data.points);
       this.data.points += actual;
       this.data.taskHistory.push({ task: task.name, points: actual, date: new Date().toISOString().slice(0, 10) });
@@ -2288,17 +2303,17 @@ const app = {
     const have = this.data.points;
     if (have < cost) {
       const diff = cost - have;
-      this.showToast(`建造${room.name}需要 ${cost} 钱，还差 ${diff} 钱~`);
+      this.showToast(`建造${room.name}需要 ${cost} ${this.currencyName()}，还差 ${diff} ${this.currencyName()}~`);
       return;
     }
-    if (!confirm(`花 ${cost} 钱建造${room.name}吗？\n建好后可以开始装饰啦！`)) return;
+    if (!confirm(`花 ${cost} ${this.currencyName()}建造${room.name}吗？\n建好后可以开始装饰啦！`)) return;
     this._unlockRoom(roomId, true);
   },
 
   _unlockRoom(roomId, jumpToIt) {
     const room = ROOMS[roomId];
     const cost = room.unlockPrice;
-    if (this.data.points < cost) { this.showToast('钱不够哦~'); return; }
+    if (this.data.points < cost) { this.showToast(this.currencyName() + '不够哦~'); return; }
     const charId = this.data.currentCharacter;
     const house = this.data.houses[charId];
     if (house.rooms[roomId].unlocked) return;
@@ -2321,6 +2336,8 @@ const app = {
     document.querySelectorAll('#house-settings-modal .pet-mode-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.mode === cur);
     });
+    const inp = document.getElementById('currency-name-input');
+    if (inp) inp.value = this.currencyName();
     document.getElementById('house-settings-modal').classList.add('show');
   },
 
@@ -2335,6 +2352,29 @@ const app = {
     this.saveData();
     this.openHouseSettings();  // 刷新 active 状态
     if (this.currentPage === 'house') this.renderHouse();
+  },
+
+  saveCurrencyName() {
+    const inp = document.getElementById('currency-name-input');
+    if (!inp) return;
+    const v = (inp.value || '').trim();
+    if (!v) { this.showToast('名字不能空~'); return; }
+    if ([...v].length > 6) { this.showToast('最多 6 个字'); return; }
+    if (!this.data.settings) this.data.settings = {};
+    this.data.settings.currencyName = v;
+    this.saveData();
+    this._refreshCurrencyText();
+    this.updateAllPoints();
+    if (this.currentPage === 'task') this.renderTasks();
+    if (this.currentPage === 'battle') this.renderBattle();
+    if (this.currentPage === 'shop') this.renderShop();
+    this.showToast('已改成 ' + v);
+  },
+
+  resetCurrencyName() {
+    const inp = document.getElementById('currency-name-input');
+    if (inp) inp.value = '奥特曼币';
+    this.saveCurrencyName();
   },
 
   // 宠物漫游动画
@@ -2394,7 +2434,7 @@ const app = {
                (parkCount > 0 ? ` · 乐园里 ${parkCount} 只` : '') + `</div>`;
       if (slots < 4) {
         const nextCost = slots === 2 ? 300 : 800;
-        notice += `<button class="pet-slot-unlock-btn" onclick="app.unlockPetSlot()">解锁第 ${slots + 1} 个宠物位（${nextCost} 钱）</button>`;
+        notice += `<button class="pet-slot-unlock-btn" onclick="app.unlockPetSlot()">解锁第 ${slots + 1} 个宠物位（${nextCost} ${this.currencyName()}）</button>`;
       }
     }
     if (this.shopCategory === 'theme') {
@@ -2468,7 +2508,7 @@ const app = {
     const points = this.data.points || 0;
 
     let html = `<div class="wish-header">
-      <div class="wish-subtitle">把每天赚到的钱存起来，换一个真正想要的小心愿 💝</div>
+      <div class="wish-subtitle">把每天赚到的${this.currencyName()}存起来，换一个真正想要的小心愿 💝</div>
       <button class="wish-mgr-btn" onclick="app.showWishManager()">⚙️ 家长管理</button>
     </div>`;
 
@@ -2492,10 +2532,10 @@ const app = {
           <div class="wish-icon">${icon}</div>
           <div class="wish-name">${this._esc(it.name)}</div>
           <div class="wish-rmb">参考价 ¥${rmb}</div>
-          <div class="wish-game-price">⭐ 需要 ${game} 钱</div>
+          <div class="wish-game-price">⭐ 需要 ${game} ${this.currencyName()}</div>
           ${enough
             ? `<button class="wish-redeem-btn" onclick="app.redeemWish('${it.id}')">我要兑换 ✨</button>`
-            : `<div class="wish-short">还差 ${game - points} 钱</div>`}
+            : `<div class="wish-short">还差 ${game - points} ${this.currencyName()}</div>`}
         </div>`;
       }).join('') + '</div>';
     }
@@ -2514,10 +2554,10 @@ const app = {
     if (!item) return;
     if (item.status !== 'active') return;
     const cost = item.gamePrice || (item.rmbPrice * WISH_RATE);
-    if (this.data.points < cost) { this.showToast('钱不够哦~'); return; }
+    if (this.data.points < cost) { this.showToast(this.currencyName() + '不够哦~'); return; }
     // 防误点二次确认
-    if (!confirm(`确认兑换"${item.name}"吗？\n将扣除 ${cost} 钱。`)) return;
-    if (this.data.points < cost) { this.showToast('钱不够哦~'); return; }
+    if (!confirm(`确认兑换"${item.name}"吗？\n将扣除 ${cost} ${this.currencyName()}。`)) return;
+    if (this.data.points < cost) { this.showToast(this.currencyName() + '不够哦~'); return; }
     this.data.points -= cost;
     item.status = 'pending';
     item.redeemedAt = Date.now();
@@ -2552,9 +2592,9 @@ const app = {
         <span class="wish-mgr-unit">元</span>
         <span class="wish-mgr-arrow">→</span>
         <input type="number" id="new-wish-game" class="wish-mgr-game" placeholder="0" min="0">
-        <span class="wish-mgr-unit">钱</span>
+        <span class="wish-mgr-unit">${this.currencyName()}</span>
       </div>
-      <div class="wish-mgr-hint">默认 1 元 = ${WISH_RATE} 钱（可手动改"钱"那一栏覆盖）</div>
+      <div class="wish-mgr-hint">默认 1 元 = ${WISH_RATE} ${this.currencyName()}（可手动改"${this.currencyName()}"那一栏覆盖）</div>
       <button class="task-mgr-add-btn wish-mgr-add-btn" onclick="app.addWishItem()">+ 添加心愿</button>
     </div>`;
     html += '</div>';
@@ -2788,7 +2828,7 @@ const app = {
     const item = this.pendingBuyItem;
     if (!item) return;
     if (this.data.points < item.price) {
-      document.getElementById('buy-name').textContent = '钱不够哦~';
+      document.getElementById('buy-name').textContent = this.currencyName() + '不够哦~';
       document.getElementById('buy-name').style.color = '#FF6B6B';
       setTimeout(() => { document.getElementById('buy-name').style.color = ''; this.closeBuy(); }, 1000);
       return;
@@ -2946,7 +2986,7 @@ const app = {
     if ((status.todayActions[action] || 0) >= 1) { this.showToast('今天已经做过啦~'); return; }
 
     const cost = this.PET_ACTION_COST;
-    if (this.data.points < cost) { this.showToast('钱不够哦~'); return; }
+    if (this.data.points < cost) { this.showToast(this.currencyName() + '不够哦~'); return; }
 
     this.data.points -= cost;
     status.todayActions[action] = (status.todayActions[action] || 0) + 1;
@@ -3065,7 +3105,7 @@ const app = {
     // 解锁更多宠物位
     if (slots < 4) {
       const nextCost = slots === 2 ? 300 : 800;
-      header += `<button class="pet-slot-unlock-btn" onclick="app.unlockPetSlot()">解锁第 ${slots + 1} 个宠物位（${nextCost} 钱）</button>`;
+      header += `<button class="pet-slot-unlock-btn" onclick="app.unlockPetSlot()">解锁第 ${slots + 1} 个宠物位（${nextCost} ${this.currencyName()}）</button>`;
     }
 
     let body;
@@ -3162,7 +3202,7 @@ const app = {
       this.showToast('家里宠物位满了~');
       return;
     }
-    if (this.data.points < 20) { this.showToast('钱不够哦~'); return; }
+    if (this.data.points < 20) { this.showToast(this.currencyName() + '不够哦~'); return; }
     const park = this.data.petPark[charId] || [];
     const idx = park.indexOf(petId);
     if (idx === -1) return;
@@ -3184,8 +3224,8 @@ const app = {
     const slots = this.data.petSlots.unlockedCount;
     if (slots >= 4) return;
     const cost = slots === 2 ? 300 : 800;
-    if (this.data.points < cost) { this.showToast('钱不够哦~'); return; }
-    if (!confirm(`确认花 ${cost} 钱解锁第 ${slots + 1} 个宠物位？`)) return;
+    if (this.data.points < cost) { this.showToast(this.currencyName() + '不够哦~'); return; }
+    if (!confirm(`确认花 ${cost} ${this.currencyName()}解锁第 ${slots + 1} 个宠物位？`)) return;
     this.data.points -= cost;
     this.data.petSlots.unlockedCount = slots + 1;
     this.saveData();
@@ -3422,11 +3462,11 @@ const app = {
       </button>
       <button class="atk-btn atk-strong" onclick="app.attack('strong')">
         <span class="atk-icon">⚡</span><span class="atk-label">强力攻击</span>
-        <span class="atk-cost">&#9733; 10 钱</span><span class="atk-dmg">伤害 3</span>
+        <span class="atk-cost">&#9733; 10 ${this.currencyName()}</span><span class="atk-dmg">伤害 3</span>
       </button>
       <button class="atk-btn atk-ultimate" onclick="app.attack('ultimate')">
         <span class="atk-icon">💥</span><span class="atk-label">必杀技</span>
-        <span class="atk-cost">&#9733; 25 钱</span><span class="atk-dmg">伤害 8</span>
+        <span class="atk-cost">&#9733; 25 ${this.currencyName()}</span><span class="atk-dmg">伤害 8</span>
       </button>`;
     document.getElementById('battle-actions').innerHTML = actionsHTML;
 
@@ -3460,7 +3500,7 @@ const app = {
     if (type === 'normal') { if (!this.canFreeAttack()) return; damage = 1; this.data.battle.lastFreeAttackDate = this.getToday(); }
     else if (type === 'strong') { cost = 10; damage = 3; }
     else if (type === 'ultimate') { cost = 25; damage = 8; }
-    if (cost > 0 && this.data.points < cost) { this.showBattleLog('钱不够哦~', '#FF6B6B'); return; }
+    if (cost > 0 && this.data.points < cost) { this.showBattleLog(this.currencyName() + '不够哦~', '#FF6B6B'); return; }
     if (cost > 0) this.data.points -= cost;
     this.doAttackAnim(damage, type === 'ultimate', cost);
     const labels = { normal: '普通攻击', strong: '强力攻击', ultimate: '必杀技' };
@@ -3556,19 +3596,22 @@ const app = {
       const itemLine = rewardItem
         ? `<br><span style="color:#666;font-size:15px">获得专属装饰：${rewardItem.icon} ${rewardItem.name}</span>`
         : '';
-      textEl.innerHTML = `你打败了 <b>${b.name}</b>！<br><span style="color:#FFB300;font-size:20px;font-weight:800">+${reward} 钱</span>${itemLine}`;
+      textEl.innerHTML = `你打败了 <b>${b.name}</b>！<br><span style="color:#FFB300;font-size:20px;font-weight:800">+${reward} ${this.currencyName()}</span>${itemLine}`;
       modal.classList.add('boss-victory');
     } else {
       const m = this.data.battle.currentMonster;
+      const reward = m.rewardPoints || 15;
+      this.data.points += reward;
       this.data.battle.trophies.push({ id: m.id, name: m.name, icon: m.icon, defeatedDate: this.getToday() });
       this.data.battle.currentMonster = null;
       this.data.battle.killCount = (this.data.battle.killCount || 0) + 1;
       this.saveData();
+      this.updateAllPoints();
       SFX.play('victory');
       this.celebrate();
       if (iconEl) iconEl.textContent = '🎉';
       if (titleEl) { titleEl.textContent = '怪兽被打败啦！'; titleEl.style.color = '#FF6B6B'; }
-      textEl.textContent = `你打败了 ${m.name}！战利品已加入小屋墙上！`;
+      textEl.innerHTML = `你打败了 ${m.name}！<br><span style="color:#FFB300;font-size:20px;font-weight:800">+${reward} ${this.currencyName()}</span><br><span style="color:#666;font-size:14px">战利品已加入小屋墙上</span>`;
       modal.classList.remove('boss-victory');
     }
     modal.classList.add('show');
